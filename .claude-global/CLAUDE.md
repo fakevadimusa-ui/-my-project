@@ -1,55 +1,62 @@
-# KYROS Global Brain — Always Loaded
-
-> This file lives at ~/.claude/CLAUDE.md and loads in EVERY Claude Code session regardless of directory.
-> Full project context: ~/Desktop/my-project/CLAUDE.md
-> Memory notes: ~/Desktop/my-project/memory/MEMORY.md
-> Session logs: ~/Desktop/my-project/logs/
-
----
+# KBros Command Center — Master Context
 
 ## Who I Am
 - Name: Vadim (Windows username: Vad)
-- Business: K Brothers Renovation LLC — real estate wholesaling
-- Location: Springfield, MO (zip codes 65802, 65803)
-- GitHub: https://github.com/fakevadimusa-ui/-my-project
-- Git identity: name=Vadim, email=Fakevadimusa@gmail.com
+- Business: K Brothers Renovation LLC
+- Location: Springfield, MO
+- Focus: Real estate wholesaling (zip codes 65802, 65803)
+- Stage: Phase 1 — Foundation (building the machine)
+- Student discount on Apple products
 
-## If I Say "I Lost Everything" — Run This Recovery
-```bash
-cd ~/Desktop
-git clone https://github.com/fakevadimusa-ui/-my-project.git my-project
-cd my-project
-cat CLAUDE.md
-cat memory/MEMORY.md
-ls logs/
-```
-Everything comes back from GitHub. That's the source of truth.
+## Business Context
+### Wholesaling Model
+- Find distressed properties → get under contract → assign to cash buyer → collect fee
+- Target: $5K–$10K per deal at consistency phase, $20K+/month at scale
+- MAO formula: ARV × 0.70 − estimated repairs − assignment fee
 
-## Active Projects
-- `~/Desktop/my-project` — main repo (CLAUDE.md, memory, logs, scripts)
-- `~/Desktop/kbros-app` — React app (KBros Command Center, runs on localhost:5173)
-  - Start it: `cd ~/Desktop/kbros-app && npm run dev`
+### Current Pipeline
+- Building cash buyer list (target: 10+ buyers)
+- Learning to pull comps and estimate ARV
+- Practicing seller call scripts
+- Setting up LLC + business bank account
 
-## Current Business Stage
-- KYROS Phase 1 (Super Memory) — ACTIVE, just set up
-- Wholesaling Phase 1 (Foundation) — IN PROGRESS
-- No deals closed yet, building the machine
+### Key Tools Being Built
+- KBros Command Center (React app, lives at ~/Desktop/kbros-app)
+- KYROS system (this memory + automation stack)
+- GitHub repo: https://github.com/fakevadimusa-ui/-my-project
 
-## MAO Formula
-ARV × 0.70 − estimated repairs − assignment fee = Max Offer
+## Dev Environment
+- OS: Windows 10 Pro (but using bash shell via Claude Code)
+- Main project folder: ~/Desktop/my-project
+- React app: ~/Desktop/kbros-app (Vite + React, runs on localhost:5173)
+- Git configured: user.name = Vadim, user.email = Fakevadimusa@gmail.com
+- GitHub username: fakevadimusa-ui
 
-## Coding Rules
-- React + inline styles, no Tailwind
-- localStorage (never window.storage)
-- Plain JavaScript, no TypeScript
-- Inter or DM Sans font
-- Single-file components when possible
+## Coding Preferences
+- React with inline styles (no Tailwind, no CSS modules)
+- Inter or DM Sans font via Google Fonts
+- localStorage for persistence (NOT window.storage)
+- Keep components in single files when possible
+- No TypeScript — plain JavaScript
+- Concise, no unnecessary comments
 
-## Session Start Checklist
-1. `cd ~/Desktop/my-project && git pull`
-2. Read CLAUDE.md + memory/MEMORY.md
-3. Check latest log in logs/
+## Memory System (KYROS Phase 1)
+- CLAUDE.md (this file): master context, read every session
+- memory/MEMORY.md: auto-saved notes, patterns, insights
+- logs/: daily session logs (YYYY-MM-DD.md)
+- scripts/dream.sh: consolidates memory weekly
 
-## Session End Checklist
-1. `git add . && git commit -m "brief note" && git push`
-2. Hook auto-logs to logs/YYYY-MM-DD.md
+## Session Habits
+- Always pull from GitHub at start: `cd ~/Desktop/my-project && git pull`
+- Always push at end: `git add . && git commit -m "session notes" && git push`
+- Log what was built, what's next
+
+## Phase 1 Checklist Status
+- [x] GitHub repo connected
+- [x] KBros Command Center built (React)
+- [x] CLAUDE.md created
+- [ ] Cash buyer list (10+ buyers)
+- [ ] LLC + business bank account
+- [ ] Pull comps + ARV workflow
+- [ ] MAO formula practiced
+- [ ] Seller call scripts practiced

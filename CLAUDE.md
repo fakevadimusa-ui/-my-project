@@ -51,6 +51,31 @@
 - Always push at end: `git add . && git commit -m "session notes" && git push`
 - Log what was built, what's next
 
+## Personal Context
+- Currently: Full-time college student
+- Summer 2026: Going full-time into business
+- Age: Under 18 — will open LLC in own name when fully 18
+- Currently operating under uncle's company
+- Faith-driven: wants God's blessing on the business
+- Family: Has a wife (or future wife) — Porsche Macan GTS for her
+
+## 5-Year Vision (by 2031)
+### Financial
+- $5M net worth
+- $700K home — paid off
+- $1M beach house generating Airbnb income
+
+### Business
+- Wholesaling + Fix & Flips + Rentals
+- Markets: Springfield → Branson → St. Louis → Kansas City
+- Team of 20 people
+
+### Cars (milestones)
+- 2027: Mercedes S580
+- ~2029: McLaren 720S
+- ~2029: Cadillac Escalade (wife/kids)
+- ~2029: Porsche Macan GTS (wife)
+
 ## Phase 1 Checklist Status
 - [x] GitHub repo connected
 - [x] KBros Command Center built (React)
