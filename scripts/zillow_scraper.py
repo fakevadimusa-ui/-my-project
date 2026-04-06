@@ -65,6 +65,8 @@ SHEET_HEADERS = [
     "Zillow URL", "Status", "Notes"
 ]
 
+LEADS_JSON = os.path.join(os.path.dirname(__file__), "..", "public", "leads.json")
+
 # ---- SCRAPER -----------------------------------------------------------------
 
 BROWSER_HEADERS = {
@@ -219,6 +221,110 @@ def connect_sheet():
     creds  = Credentials.from_service_account_file(KEY_FILE, scopes=scopes)
     client = gspread.authorize(creds)
     return client.open_by_key(SHEET_ID).worksheet(SHEET_TAB)
+
+
+def format_sheet(sheet):
+    """Apply professional formatting to the sheet."""
+    try:
+        import gspread.utils as gu
+        # Freeze header row
+        sheet.spreadsheet.batch_update({"requests": [{
+            "updateSheetProperties": {
+                "properties": {"sheetId": sheet.id, "gridProperties": {"frozenRowCount": 1}},
+                "fields": "gridProperties.frozenRowCount"
+            }
+        }]})
+        # Bold + dark header
+        sheet.format("A1:R1", {
+            "backgroundColor": {"red": 0.18, "green": 0.18, "blue": 0.22},
+            "textFormat": {"bold": True, "foregroundColor": {"red": 1, "green": 1, "blue": 1}, "fontSize": 10},
+            "horizontalAlignment": "CENTER",
+        })
+        # Column widths
+        col_widths = [90, 240, 100, 100, 140, 100, 90, 45, 45, 60, 80, 280, 55, 120, 110, 260, 80, 160]
+        requests = []
+        for i, w in enumerate(col_widths):
+            requests.append({"updateDimensionProperties": {
+                "range": {"sheetId": sheet.id, "dimension": "COLUMNS", "startIndex": i, "endIndex": i + 1},
+                "properties": {"pixelSize": w},
+                "fields": "pixelSize"
+            }})
+        sheet.spreadsheet.batch_update({"requests": requests})
+    except Exception as e:
+        print(f"  (sheet formatting skipped: {e})")
+
+
+def color_rows(sheet, leads):
+    """Color rows by score: green=deal, red=hot, yellow=warm, white=cold."""
+    try:
+        all_rows = sheet.get_all_values()
+        requests = []
+        for i, row in enumerate(all_rows[1:], start=2):
+            if len(row) < 13:
+                continue
+            try:
+                score = int(row[12])
+                profit_cell = row[4]
+                is_deal = "DEAL NOW" in profit_cell
+            except Exception:
+                continue
+
+            if is_deal:
+                bg = {"red": 0.85, "green": 0.97, "blue": 0.87}  # green
+            elif score >= 3:
+                bg = {"red": 1.0, "green": 0.92, "blue": 0.92}   # red
+            elif score >= 1:
+                bg = {"red": 1.0, "green": 0.97, "blue": 0.84}   # yellow
+            else:
+                continue
+
+            requests.append({"repeatCell": {
+                "range": {"sheetId": sheet.id, "startRowIndex": i - 1, "endRowIndex": i, "startColumnIndex": 0, "endColumnIndex": 18},
+                "cell": {"userEnteredFormat": {"backgroundColor": bg}},
+                "fields": "userEnteredFormat.backgroundColor"
+            }})
+
+        if requests:
+            sheet.spreadsheet.batch_update({"requests": requests})
+    except Exception as e:
+        print(f"  (row coloring skipped: {e})")
+
+
+def write_leads_json(leads):
+    """Write top leads to public/leads.json for the React app to consume."""
+    top = [l for l in leads if l["score"] > 0][:50]
+    output = []
+    for l in top:
+        profit_val = l.get("profit", 0)
+        output.append({
+            "id":         l["address"].replace(" ", "-").lower()[:40],
+            "address":    l["address"],
+            "price":      l["price"],
+            "priceRaw":   l.get("price_raw", 0),
+            "offerAt":    l["offer_at"],
+            "mao":        l["mao"],
+            "profit":     profit_val,
+            "profitLabel": f"+${profit_val:,} — DEAL NOW" if profit_val > 0 else f"Need ${abs(profit_val):,} off asking",
+            "isDeal":     profit_val > 0,
+            "priceDrop":  l["price_drop"],
+            "beds":       l["beds"],
+            "baths":      l["baths"],
+            "sqft":       l["sqft"],
+            "dom":        l["dom"],
+            "signals":    l["signals"],
+            "score":      l["score"],
+            "agentPhone": l.get("agent_phone", ""),
+            "yourNumber": YOUR_NUMBER,
+            "url":        ("https://www.zillow.com" + l["url"]) if l["url"] and not l["url"].startswith("http") else l["url"],
+            "status":     "New",
+        })
+    try:
+        os.makedirs(os.path.dirname(LEADS_JSON), exist_ok=True)
+        with open(LEADS_JSON, "w") as f:
+            json.dump({"updated": datetime.now().isoformat(), "leads": output}, f, indent=2)
+        print(f"  Wrote {len(output)} leads to public/leads.json")
+    except Exception as e:
+        print(f"  (leads.json write failed: {e})")
 
 
 def push_leads(sheet, leads):
@@ -393,12 +499,19 @@ def main():
     # Display
     print_call_sheet(leads)
 
-    # Push to sheet
+    # Write leads.json for React app
+    write_leads_json(leads)
+
+    # Push to sheet + format
     print("  Pushing to Google Sheets...", end=" ", flush=True)
     try:
         sheet = connect_sheet()
         added = push_leads(sheet, leads)
         print(f"{added} new leads added.")
+        print("  Formatting sheet...", end=" ", flush=True)
+        format_sheet(sheet)
+        color_rows(sheet, leads)
+        print("done.")
         print(f"  Sheet: https://docs.google.com/spreadsheets/d/{SHEET_ID}\n")
     except Exception as e:
         print(f"\n  [!] Sheet error: {e}\n")

@@ -94,6 +94,26 @@ export default function KBrosCommandCenter() {
   const [newSession, setNewSession] = useState({ title: "", summary: "" });
   const [newStep, setNewStep] = useState("");
   const [showAddSession, setShowAddSession] = useState(false);
+  const [leads, setLeads] = useState([]);
+  const [leadsUpdated, setLeadsUpdated] = useState("");
+  const [leadStatuses, setLeadStatuses] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("kbros-lead-statuses") || "{}"); } catch { return {}; }
+  });
+
+  useEffect(() => {
+    fetch("/leads.json")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d) { setLeads(d.leads || []); setLeadsUpdated(d.updated || ""); }
+      })
+      .catch(() => {});
+  }, []);
+
+  const setLeadStatus = (id, status) => {
+    const updated = { ...leadStatuses, [id]: status };
+    setLeadStatuses(updated);
+    localStorage.setItem("kbros-lead-statuses", JSON.stringify(updated));
+  };
 
   useEffect(() => {
     try {
@@ -222,7 +242,7 @@ export default function KBrosCommandCenter() {
       {/* TABS */}
       <div style={s.tabsWrap}>
         <div style={s.tabs}>
-          {[{ key: "overview", label: "Overview" }, { key: "roadmap", label: "Roadmap" }, { key: "sessions", label: "Code Log" }, { key: "next", label: "Next Steps" }, { key: "vision", label: "👑 5-Year Vision" }].map((tab) => (
+          {[{ key: "overview", label: "Overview" }, { key: "leads", label: `Leads ${leads.length ? `(${leads.filter(l=>l.score>=3).length} hot)` : ""}` }, { key: "roadmap", label: "Roadmap" }, { key: "sessions", label: "Code Log" }, { key: "next", label: "Next Steps" }, { key: "vision", label: "5-Year Vision" }].map((tab) => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
               style={{ ...s.tab, ...(activeTab === tab.key ? s.tabActive : {}) }}>
               {tab.label}
@@ -429,6 +449,93 @@ export default function KBrosCommandCenter() {
               ))}
               {data.nextSteps.length === 0 && <div style={s.emptyState}>All clear! Add your next moves above.</div>}
             </div>
+          </div>
+        )}
+
+        {/* ── LEADS ── */}
+        {activeTab === "leads" && (
+          <div className="fade">
+            {/* Header row */}
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:8 }}>
+              <div>
+                <h2 style={s.sectionTitle}>Zillow Lead Feed</h2>
+                {leadsUpdated && <div style={{ fontSize:12, color:"#aaa", marginTop:3 }}>Last scan: {new Date(leadsUpdated).toLocaleString()}</div>}
+              </div>
+              <div style={{ display:"flex", gap:8 }}>
+                <StatPill label="Total" value={leads.length} color="#4f46e5" />
+                <StatPill label="Hot" value={leads.filter(l=>l.score>=3).length} color="#dc2626" />
+                <StatPill label="Deals" value={leads.filter(l=>l.isDeal).length} color="#059669" />
+              </div>
+            </div>
+
+            {leads.length === 0 ? (
+              <div style={{ ...s.emptyState, background:"#fff", borderRadius:14, border:"1px solid #e4e4e7", padding:48 }}>
+                <div style={{ fontSize:32, marginBottom:12 }}>🏚</div>
+                <div style={{ fontWeight:700, marginBottom:6 }}>No leads loaded yet</div>
+                <div style={{ fontSize:13, color:"#aaa" }}>Run <code style={{ background:"#f4f4f5", padding:"2px 6px", borderRadius:4 }}>py scripts/zillow_scraper.py</code> to pull fresh leads</div>
+              </div>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                {leads.map((lead) => {
+                  const status = leadStatuses[lead.id] || lead.status || "New";
+                  const isHot  = lead.score >= 3;
+                  const isDeal = lead.isDeal;
+                  const borderColor = isDeal ? "#059669" : isHot ? "#dc2626" : "#e4e4e7";
+                  const badgeBg    = isDeal ? "#dcfce7" : isHot ? "#fee2e2" : "#fef3c7";
+                  const badgeColor = isDeal ? "#059669" : isHot ? "#dc2626" : "#d97706";
+                  const badgeText  = isDeal ? "DEAL NOW" : isHot ? "HOT" : "WARM";
+                  const statusColors = { New:"#4f46e5", Called:"#0891b2", "Offer Made":"#d97706", Dead:"#aaa", Closed:"#059669" };
+                  return (
+                    <div key={lead.id} style={{ background:"#fff", border:`1px solid ${borderColor}`, borderLeft:`4px solid ${borderColor}`, borderRadius:14, padding:"18px 20px" }}>
+                      {/* Top row */}
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12, flexWrap:"wrap", gap:8 }}>
+                        <div style={{ flex:1 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4, flexWrap:"wrap" }}>
+                            <span style={{ background:badgeBg, color:badgeColor, fontSize:10, fontWeight:800, padding:"2px 8px", borderRadius:6, letterSpacing:0.5 }}>{badgeText}</span>
+                            <span style={{ fontSize:11, background:"#f4f4f5", color:"#666", padding:"2px 8px", borderRadius:6 }}>Score {lead.score}</span>
+                            {lead.dom > 0 && <span style={{ fontSize:11, background:"#f4f4f5", color:"#666", padding:"2px 8px", borderRadius:6 }}>DOM {lead.dom}d</span>}
+                          </div>
+                          <div style={{ fontSize:16, fontWeight:700, color:"#111" }}>{lead.address}</div>
+                          {lead.signals && <div style={{ fontSize:12, color:"#888", marginTop:3 }}>{lead.signals}</div>}
+                        </div>
+                        {/* Status picker */}
+                        <select value={status} onChange={e => setLeadStatus(lead.id, e.target.value)}
+                          style={{ fontSize:12, fontWeight:600, color:statusColors[status]||"#555", background:"#f9f9f9", border:"1px solid #e4e4e7", borderRadius:8, padding:"5px 10px", fontFamily:"Inter,sans-serif", cursor:"pointer" }}>
+                          {["New","Called","Offer Made","Dead","Closed"].map(s => <option key={s}>{s}</option>)}
+                        </select>
+                      </div>
+
+                      {/* Deal numbers */}
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(120px, 1fr))", gap:8, marginBottom:12 }}>
+                        {[
+                          { label:"Asking",   value:lead.price,   color:"#111"    },
+                          { label:"Offer At", value:lead.offerAt, color:"#4f46e5" },
+                          { label:"MAO",      value:lead.mao,     color:"#0891b2" },
+                          { label:"Profit",   value:lead.profitLabel, color: isDeal ? "#059669" : "#d97706" },
+                        ].map(n => (
+                          <div key={n.label} style={{ background:"#f9f9f9", borderRadius:10, padding:"10px 14px" }}>
+                            <div style={{ fontSize:10, color:"#aaa", fontWeight:700, textTransform:"uppercase", letterSpacing:0.5, marginBottom:4 }}>{n.label}</div>
+                            <div style={{ fontSize:14, fontWeight:700, color:n.color }}>{n.value || "—"}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Footer row */}
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8 }}>
+                        <div style={{ display:"flex", gap:16, fontSize:12, color:"#888" }}>
+                          {lead.agentPhone && <span>Agent: <strong style={{ color:"#333" }}>{lead.agentPhone}</strong></span>}
+                          <span>Your #: <strong style={{ color:"#4f46e5" }}>{lead.yourNumber}</strong></span>
+                        </div>
+                        <a href={lead.url} target="_blank" rel="noreferrer"
+                          style={{ fontSize:12, fontWeight:600, color:"#4f46e5", background:"#eff0fe", padding:"6px 14px", borderRadius:8, textDecoration:"none" }}>
+                          View on Zillow →
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
