@@ -22,3 +22,9 @@ echo "- Working dir: $(pwd)" >> "$LOG_FILE"
 echo "" >> "$LOG_FILE"
 
 echo "Session logged to $LOG_FILE"
+
+# Keep global brain in sync with repo backup
+if [ -f "$PROJECT/CLAUDE.md" ]; then
+  cp "$PROJECT/CLAUDE.md" "$HOME/.claude/CLAUDE.md" 2>/dev/null
+  cp "$PROJECT/CLAUDE.md" "$PROJECT/.claude-global/CLAUDE.md" 2>/dev/null
+fi
