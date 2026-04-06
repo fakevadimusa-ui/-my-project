@@ -1,25 +1,31 @@
-# KYROS Memory — K Brothers Renovation LLC
-
+# KYROS Memory Index — K Brothers Renovation LLC
 > Auto-maintained. Max 200 lines. Run dream.sh to consolidate.
 
 ---
 
-## Session Log Index
-- 2026-04-05: Initial setup — GitHub connected, KBros Command Center built, KYROS Phase 1 started
+## Memory Files
+- [Cash Buyer Methods](cash-buyer-methods.md) — 5 methods to build buyer list in Springfield MO
+- [Cash Buyer Outreach Script](cash-buyer-outreach-script.md) — call, text, voicemail, FB post scripts
+- [Trading Strategy](trading-strategy.md) — VWAP + EMA50/100 on BTCUSD 15m, TradingView
+- [Business Plan](../BUSINESS_PLAN.md) — 90-day sprint, daily schedule, deal process, KPIs
+
+---
 
 ## Key Decisions
-- Using Vite + React (not CRA) for faster dev
-- localStorage over window.storage for portability
-- Single-file components with inline styles
-- kbros-app is separate from my-project repo (may merge later)
+- React + Vite, inline styles, no Tailwind, no TypeScript, localStorage
+- Single-file components where possible
+- kbros-lead-machine (home PC) needs to be pushed to GitHub
 
-## Business State
+## Business State (April 2026)
 - Phase 1 active — Foundation
-- No deals closed yet
-- No LLC formed yet
-- No cash buyers yet
+- 30+ listings analyzed, 0 deals closed
+- Cash buyer list: building (0–10 buyers)
+- LLC not yet in own name (using uncle's)
+- Lead machine app exists on home PC — not yet synced to GitHub
 
 ## Technical Notes
-- Dev server: `cd ~/Desktop/kbros-app && npm run dev` → localhost:5173
-- Git push: `cd ~/Desktop/my-project && git add . && git commit -m "msg" && git push`
-- Windows username is Vad (not Vadim — Vadim is git display name only)
+- Home PC username: Vad | Git display name: Vadim
+- School PC path: ~/Desktop/-my-project
+- Home PC lead machine: C:\Users\Vad\Documents\kbros-lead-machine
+- Dev server: `npm run dev` → localhost:5173
+- Git push habit: `git add . && git commit -m "msg" && git push`
