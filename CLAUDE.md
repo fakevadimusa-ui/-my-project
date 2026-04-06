@@ -124,6 +124,18 @@
 - Pull at start: `cd ~/Desktop/-my-project && git pull`
 - Push at end: `git add . && git commit -m "session notes" && git push`
 
+### 🔴 AUTO-RUN EVERY SESSION — Zillow Lead Scan
+**Claude must do this at the START of every session without being asked:**
+1. Run the Zillow scraper: `py scripts/zillow_scraper.py`
+2. Show Vadim the top scored leads (score 3+) with address, price, DOM, and distress signals
+3. Calculate MAO for each: ARV × 0.70 − repairs − $5,000 assignment fee
+   - Use price as a proxy for ARV if no comp data available
+   - Flag any deal where MAO leaves room (price is more than 15% above MAO = skip, under MAO = hot lead)
+4. Key file lives at: `scripts/zillow-bot-key.json` — recreate from memory if missing (see below)
+
+**If zillow-bot-key.json is missing**, tell Vadim and ask him to paste the JSON key or get it from Google Drive.
+**Sheet:** https://docs.google.com/spreadsheets/d/18oJwsncdmlaDrT2O_q3sOoOJwfB7SdKRWLO37HWAgSo
+
 ---
 
 ## Trading
