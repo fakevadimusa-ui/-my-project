@@ -85,6 +85,12 @@
     .callback{grid-column:1/-1;background:linear-gradient(180deg,rgba(210,153,34,.14),rgba(210,153,34,.06))}
     .script-panel{padding:16px;display:flex;flex-direction:column;gap:14px}
     .right .scroll{flex:1;overflow-y:auto}
+    .q-input{
+      width:100%;padding:7px 10px;border-radius:8px;background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.1);color:#f0f6fc;font:13px 'Satoshi',sans-serif;outline:none;
+    }
+    .q-input:focus{border-color:rgba(0,217,255,.4);}
+    .q-input::placeholder{color:var(--muted)}
     .terminal{
       background:#0b1016;border:1px solid rgba(0,217,255,.12);border-radius:14px;padding:14px;
       font:13px/1.7 'JetBrains Mono',monospace;color:#9FEAF8
@@ -295,12 +301,29 @@
           </div>
 
           <div class="terminal">
-            <div style="color:var(--accent);margin-bottom:6px">IF YES — just have a conversation</div>
-            <div style="line-height:2">
-              <div>→ <span style="color:#f0f6fc">"What's your situation with it — are you in a rush or pretty flexible?"</span></div>
-              <div>→ <span style="color:#f0f6fc">"How long you had it on the market?"</span></div>
-              <div>→ <span style="color:#f0f6fc">"What's the condition like inside — anything it needs?"</span></div>
-              <div>→ <span style="color:#f0f6fc">"If I came in with a cash offer, what's the lowest you'd honestly take?"</span></div>
+            <div style="color:var(--accent);margin-bottom:10px">IF YES — just have a conversation</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+
+              <div>
+                <div style="color:#f0f6fc;margin-bottom:5px">→ "What's your situation — are you in a rush or pretty flexible?"</div>
+                <input class="q-input" placeholder="Their answer..." id="qa1">
+              </div>
+
+              <div>
+                <div style="color:#f0f6fc;margin-bottom:5px">→ "How long you had it on the market?"</div>
+                <input class="q-input" placeholder="Their answer..." id="qa2">
+              </div>
+
+              <div>
+                <div style="color:#f0f6fc;margin-bottom:5px">→ "What's the condition like — anything it needs?"</div>
+                <input class="q-input" placeholder="Their answer..." id="qa3">
+              </div>
+
+              <div>
+                <div style="color:#f0f6fc;margin-bottom:5px">→ "What's the lowest you'd honestly take?"</div>
+                <input class="q-input" placeholder="Their answer..." id="qa4">
+              </div>
+
             </div>
           </div>
 
@@ -361,7 +384,7 @@ const fallbackProperties = [
 
 let properties = [...fallbackProperties];
 let currentIndex = 0;
-let state = { callsDone: 8, totalCalls: 240, avgCallMin: 3.2, pipelineValue: 47500, notes: {}, timerSeconds: 154, timerRunning: true };
+let state = { callsDone: 0, totalCalls: 0, avgCallMin: 0, pipelineValue: 0, notes: {}, qa: {}, timerSeconds: 0, timerRunning: false };
 
 const $ = id => document.getElementById(id);
 const fmtMoney = n => '$' + Math.round(Number(n || 0)).toLocaleString();
@@ -552,6 +575,9 @@ function render(){
   $('motivationBar').style.width = `${p.motivation || 35}%`;
   $('scriptAddress').textContent = p.address.split(',')[0];
   $('scriptAddressVm').textContent = p.address.split(',')[0];
+  // Load saved Q&A answers for this lead
+  const qa = state.qa[p.id] || {};
+  ['qa1','qa2','qa3','qa4'].forEach(id => { const el=$('qa'+id.slice(2)); if(el) el.value = qa[id]||''; });
   $('scriptPrice').textContent = fmtMoney(p.price);
   $('scriptMao').textContent = fmtMoney(p.mao);
   $('notesBox').value = state.notes[p.id] || '';
@@ -565,6 +591,15 @@ function render(){
 $('notesBox').addEventListener('input', e => {
   const p = getCurrent();
   state.notes[p.id] = e.target.value;
+});
+
+['qa1','qa2','qa3','qa4'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', e => {
+    const p = getCurrent();
+    if(!state.qa[p.id]) state.qa[p.id] = {};
+    state.qa[p.id][id] = e.target.value;
+  });
 });
 
 $('csvFile').addEventListener('change', async e => {
