@@ -100,9 +100,13 @@
     <button class="tab" onclick="showTab('all')">ALL TIME</button>
   </div>
 
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
     <div class="section-title" id="logTitle">TODAY'S CALLS</div>
-    <button class="clear-btn" onclick="clearLog()">CLEAR ALL</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="exportLog()" style="padding:7px 14px;border-radius:10px;background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.25);color:#3FB950;font:700 11px 'JetBrains Mono',monospace;cursor:pointer">⬇ BACKUP</button>
+      <label style="padding:7px 14px;border-radius:10px;background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.25);color:var(--primary);font:700 11px 'JetBrains Mono',monospace;cursor:pointer">⬆ RESTORE<input type="file" accept=".json" onchange="importLog(event)" style="display:none"></label>
+      <button class="clear-btn" onclick="clearLog()">CLEAR ALL</button>
+    </div>
   </div>
 
   <table class="log-table">
@@ -228,6 +232,45 @@ function clearLog(){
     renderStats();
     renderLog();
   }
+}
+
+function exportLog(){
+  const log = getLog();
+  if(!log.length){ alert('No calls logged yet — nothing to export.'); return; }
+  const blob = new Blob([JSON.stringify(log, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `kbros-call-log-${date}.json`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function importLog(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const incoming = JSON.parse(e.target.result);
+      if(!Array.isArray(incoming)) throw new Error('Not an array');
+      const existing = getLog();
+      // Merge — deduplicate by timestamp
+      const merged = [...existing];
+      const existingTs = new Set(existing.map(x => x.ts));
+      let added = 0;
+      for(const entry of incoming){
+        if(!existingTs.has(entry.ts)){ merged.push(entry); added++; }
+      }
+      merged.sort((a,b) => a.ts - b.ts);
+      localStorage.setItem(LOG_KEY, JSON.stringify(merged));
+      alert(`Restored! Added ${added} new entries. Total: ${merged.length} calls.`);
+      renderStats(); renderLog();
+    } catch(err){
+      alert('Could not read file. Make sure it\'s a valid KBros backup JSON.');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
 }
 
 function init(){
