@@ -1,19 +1,656 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KBros Command Center</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: 'Inter', sans-serif; background: #f8f8f8; }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vadim Wholesaling Desk Import</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&f[]=jet-brains-mono@400,600,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#0D1117; --cards:#161B22; --cards2:#11161d; --border:#30363D; --primary:#58A6FF;
+      --success:#3FB950; --warning:#D29922; --danger:#F85149; --text:#C9D1D9; --muted:#8B949E; --accent:#00D9FF;
+      --radius:18px; --radiusSm:12px;
+    }
+    *{box-sizing:border-box} html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'Satoshi',sans-serif}
+    body{
+      background:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px),
+        radial-gradient(circle at top right, rgba(0,217,255,.08), transparent 28%),
+        var(--bg);
+      background-size:28px 28px,28px 28px,auto,auto;
+    }
+    .app{min-height:100vh;display:grid;grid-template-rows:72px 1fr 60px}
+    .topbar,.footer{
+      display:grid;align-items:center;padding:0 18px;background:rgba(13,17,23,.92);backdrop-filter:blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.06)
+    }
+    .topbar{grid-template-columns:1.2fr 1fr 1.2fr;gap:16px}
+    .brand,.ticker,.topstats,.mono{font-family:'JetBrains Mono',monospace}
+    .brand{font-weight:800;letter-spacing:.08em}.brand span{color:var(--accent)}
+    .ticker{
+      justify-self:center;padding:10px 16px;border-radius:999px;border:1px solid rgba(88,166,255,.25);
+      background:linear-gradient(180deg,rgba(88,166,255,.14),rgba(88,166,255,.05))
+    }
+    .topstats{justify-self:end;font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end}
+    .main{display:grid;grid-template-columns:300px minmax(0,1fr) 320px;gap:18px;padding:18px;min-height:0}
+    .card,.property-card,.script-panel,.watch-item,.stat-card,.btn,.lead-item{
+      background:linear-gradient(180deg,rgba(22,27,34,.98),rgba(17,22,29,.98));
+      border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:0 10px 30px rgba(0,0,0,.25)
+    }
+    .left,.center,.right{min-height:0;display:flex;flex-direction:column;gap:14px}
+    .scroll{min-height:0;overflow:auto;padding-right:4px}
+    .scroll::-webkit-scrollbar{width:10px}.scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:999px}
+    .head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .title{
+      font-size:13px;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:800;
+      font-family:'JetBrains Mono',monospace
+    }
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);font-size:12px;color:var(--text)
+    }
+    .card{padding:16px}
+    .big-green{font-size:40px;font-weight:900;color:var(--success);line-height:1}
+    .sub{font-size:13px;color:var(--muted)}
+    .watchlist,.stats,.lead-list{display:grid;gap:12px}
+    .watch-item,.stat-card,.lead-item{padding:14px}
+    .watch-item:hover,.lead-item:hover{transform:translateY(-2px)}
+    .stat-value{font-size:24px;font-weight:800}
+    .property-card{padding:20px;border-color:rgba(88,166,255,.22)}
+    .property-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
+    .property-header h1{margin:0;font-size:28px;line-height:1.05;color:#f0f6fc}
+    .badge{
+      padding:10px 12px;border-radius:999px;background:rgba(248,81,73,.08);border:1px solid rgba(248,81,73,.22);
+      color:var(--danger);font:700 12px 'JetBrains Mono',monospace
+    }
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}
+    .box{padding:14px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06)}
+    .label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+    .value{font:700 20px 'JetBrains Mono',monospace;color:#f0f6fc}
+    .contact{
+      margin:8px 0 18px;padding:14px 16px;border-radius:14px;background:rgba(0,217,255,.05);
+      border:1px solid rgba(0,217,255,.18);display:flex;justify-content:space-between;align-items:center;gap:12px
+    }
+    .dial{padding:10px 12px;border-radius:12px;background:rgba(63,185,80,.14);border:1px solid rgba(63,185,80,.24);color:var(--success);font-weight:800}
+    .progress{height:12px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden;border:1px solid rgba(255,255,255,.06)}
+    .progress > div{height:100%;background:linear-gradient(90deg,var(--success),var(--accent));width:35%}
+    .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .btn{padding:18px 16px;color:#f0f6fc;font-weight:800;cursor:pointer}
+    .buy{background:linear-gradient(180deg,rgba(63,185,80,.18),rgba(63,185,80,.08))}
+    .skip{background:linear-gradient(180deg,rgba(88,166,255,.18),rgba(88,166,255,.08))}
+    .hot{background:linear-gradient(180deg,rgba(210,153,34,.18),rgba(210,153,34,.08))}
+    .reject{background:linear-gradient(180deg,rgba(248,81,73,.18),rgba(248,81,73,.08))}
+    .callback{grid-column:1/-1;background:linear-gradient(180deg,rgba(210,153,34,.14),rgba(210,153,34,.06))}
+    .script-panel{padding:16px;display:flex;flex-direction:column;gap:14px;min-height:100%}
+    .terminal{
+      background:#0b1016;border:1px solid rgba(0,217,255,.12);border-radius:14px;padding:14px;
+      font:13px/1.7 'JetBrains Mono',monospace;color:#9FEAF8
+    }
+    textarea{
+      width:100%;min-height:220px;resize:vertical;background:#0a0f14;color:#b9f7ff;border:1px solid rgba(0,217,255,.15);
+      border-radius:14px;padding:14px;font:13px 'JetBrains Mono',monospace;outline:none
+    }
+    .lead-item{cursor:pointer}
+    .lead-item.active{border-color:rgba(88,166,255,.35)}
+    .lead-name{font-weight:700;color:#f0f6fc}
+    .lead-meta{font-size:12px;color:var(--muted);margin-top:6px}
+    .footer{
+      grid-template-columns:1fr auto auto;gap:18px;border-top:1px solid rgba(255,255,255,.06);border-bottom:none;
+      font:13px 'JetBrains Mono',monospace;color:var(--muted)
+    }
+    .house-view{
+      width:100%;height:220px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08);
+      background:#0b1016;margin-bottom:14px;
+    }
+    .house-view iframe,.house-view img{width:100%;height:100%;border:none;object-fit:cover;display:block}
+    .house-placeholder{
+      width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;
+      gap:8px;font:13px 'JetBrains Mono',monospace;color:var(--muted)
+    }
+    .view-tabs{display:flex;gap:8px;margin-bottom:10px}
+    .view-tab{
+      padding:6px 14px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+      font:700 11px 'JetBrains Mono',monospace;color:var(--muted);cursor:pointer
+    }
+    .view-tab.active{background:rgba(0,217,255,.12);border-color:rgba(0,217,255,.3);color:var(--accent)}
+    .zillow-btn{
+      display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;
+      background:rgba(0,106,255,.10);border:1px solid rgba(0,106,255,.25);color:#6FA8FF;
+      font:700 12px 'JetBrains Mono',monospace;text-decoration:none
+    }
+    .copy-phone{
+      padding:6px 10px;border-radius:8px;background:rgba(0,217,255,.08);border:1px solid rgba(0,217,255,.2);
+      color:var(--accent);font:700 11px 'JetBrains Mono',monospace;cursor:pointer
+    }
+    @media (max-width:1180px){
+      .app{grid-template-rows:auto auto auto}
+      .topbar,.footer{grid-template-columns:1fr;padding:14px 18px}
+      .ticker{justify-self:start}.topstats{justify-self:start;justify-content:start}
+      .main{grid-template-columns:1fr}.grid,.actions{grid-template-columns:1fr}.callback{grid-column:auto}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">VADIM <span>CAPITAL</span> | WHOLESALING DESK</div>
+    <div class="ticker" id="propertyTicker">SPR-2258 | $195K ↓5.9% DOM</div>
+    <div class="topstats">
+      <span>📊 <b id="callsDone">8</b>/15 CALLS</span>
+      <span>🔥 <b id="pipelineStat">+$7.5K</b> PIPELINE</span>
+      <span>⚡ <b>3 DAY STREAK</b></span>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="left">
+      <div class="scroll">
+        <div class="head">
+          <div class="title">Pipeline Dashboard</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="chip" id="syncBtn" onclick="syncSheet()" style="cursor:pointer;border-color:rgba(0,217,255,.3);color:var(--accent)">⟳ SYNC SHEET</button>
+            <label class="chip" for="csvFile" style="cursor:pointer">IMPORT CSV</label>
+            <input id="csvFile" type="file" accept=".csv" style="display:none">
+            <div class="chip" id="syncStatus" style="font-size:11px">Not synced</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sub">Total Pipeline Value</div>
+          <div class="big-green" id="pipelineValue">$47,500</div>
+          <div class="sub">Live desk total across active prospects</div>
+          <div style="height:120px;margin-top:16px"><canvas id="callsChart"></canvas></div>
+        </div>
+
+        <div class="watchlist">
+          <div class="watch-item"><strong>🔥 HOT LEADS</strong><div class="sub">Motivation spike detected</div></div>
+          <div class="watch-item"><strong>📞 CALLBACKS</strong><div class="sub">Queue needs action</div></div>
+          <div class="watch-item"><strong>✅ CLOSED TODAY</strong><div class="sub">Track contracts locked</div></div>
+          <div class="watch-item"><strong>❌ DEAD LEADS</strong><div class="sub">Out of funnel</div></div>
+        </div>
+
+        <div class="head"><div class="title">Desk Metrics</div></div>
+        <div class="stats">
+          <div class="stat-card"><div class="sub">Win Rate</div><div class="stat-value" style="color:var(--success)">15%</div></div>
+          <div class="stat-card"><div class="sub">Avg Response</div><div class="stat-value">2.3 days</div></div>
+          <div class="stat-card"><div class="sub">Best Lead</div><div class="stat-value" style="font-size:20px">Imported Queue</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="center">
+      <div class="scroll">
+        <div class="head"><div class="title">Property Analysis</div></div>
+        <article class="property-card">
+          <div class="property-header">
+            <div>
+              <h1 id="propertyAddress">2258 N Missouri Ave, Springfield MO</h1>
+              <div class="sub" id="propertySpecsTop">3BR | 2BA | 1,450 sqft</div>
+            </div>
+            <div class="badge" id="domBadge">DOM 165 ↑ HIGH</div>
+          </div>
+
+          <div class="view-tabs">
+            <button class="view-tab active" id="tabMap" onclick="switchView('map')">🗺 MAP</button>
+            <button class="view-tab" id="tabStreet" onclick="switchView('street')">📷 STREET VIEW</button>
+            <button class="view-tab" id="tabPhoto" onclick="switchView('photo')">🏠 PHOTO</button>
+          </div>
+          <div class="house-view" id="houseView">
+            <div class="house-placeholder">⬆ Import CSV to load map</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+            <a id="zillowBtn" class="zillow-btn" target="_blank" style="display:none">🔗 VIEW ON ZILLOW</a>
+            <span id="noZillow" class="sub" style="display:none;font-size:11px">No Zillow URL in sheet</span>
+          </div>
+
+          <div class="grid">
+            <div class="box"><div class="label">Listed Price</div><div class="value" id="listedPrice">$195,000</div></div>
+            <div class="box"><div class="label">Your MAO</div><div class="value" id="maoValue" style="color:var(--success)">$140,000</div><div class="sub" id="maoHint">28% below list</div></div>
+            <div class="box"><div class="label">Days on Market</div><div class="value" id="domValue" style="color:var(--danger)">165</div></div>
+            <div class="box"><div class="label">Condition</div><div class="value" id="conditionValue" style="color:var(--warning)">Needs Work</div></div>
+          </div>
+
+          <div class="contact">
+            <div>
+              <div class="label">Contact</div>
+              <div class="value" id="phoneValue">No phone in sheet</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="copy-phone" id="copyPhoneBtn">COPY</button>
+              <button class="dial" id="dialNowBtn">[ DIAL NOW ]</button>
+            </div>
+          </div>
+
+          <div class="box">
+            <div class="label">Property Specs</div>
+            <div class="value" id="specsValue">3BR | 2BA | 1,450 sqft</div>
+            <div class="sub" id="notesHint">Imported from CSV</div>
+          </div>
+
+          <div style="margin-top:18px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:10px" class="sub">
+              <span>Motivation</span><span id="motivationText">35%</span>
+            </div>
+            <div class="progress"><div id="motivationBar"></div></div>
+          </div>
+        </article>
+
+        <div style="height:16px"></div>
+
+        <div class="head"><div class="title">Action Panel</div></div>
+        <div class="actions">
+          <button class="btn buy" id="callBtn">🟢 CALL NOW</button>
+          <button class="btn skip" id="nextLeadBtn">🔵 NEXT LEAD ➡</button>
+          <button class="btn hot" id="markHotBtn">⭐ MARK HOT</button>
+          <button class="btn reject" id="rejectBtn">❌ REJECT</button>
+          <button class="btn callback" id="callbackBtn">⏰ SCHEDULE CALLBACK</button>
+        </div>
+
+        <div style="height:16px"></div>
+        <div class="head"><div class="title">Lead Queue</div></div>
+        <div class="lead-list" id="leadList"></div>
+      </div>
+    </section>
+
+    <aside class="right">
+      <div class="scroll">
+        <div class="head"><div class="title">Call Script v2.3</div></div>
+        <div class="script-panel">
+          <div class="terminal">
+            <div>&gt; OPENING:</div>
+            <div>"Hi, I'm Vadim with K Brothers in Springfield.</div>
+            <div>Saw your property at <span id="scriptAddress">2258 N Missouri Ave</span></div>
+            <div>for <span id="scriptPrice">$195,000</span>. Still selling?"</div>
+          </div>
+          <div class="terminal">
+            <div>&gt; IF YES → ASK:</div>
+            <div>□ Why selling?</div>
+            <div>□ Timeline?</div>
+            <div>□ Condition?</div>
+            <div>□ Lowest price?</div>
+          </div>
+          <div class="terminal">
+            <div>&gt; OFFER PROTOCOL:</div>
+            <div>If motivated → Offer <span id="scriptMao">$140,000</span></div>
+            <div>If hesitant → Schedule callback</div>
+            <div>If hostile → Next lead</div>
+          </div>
+          <div>
+            <div class="title" style="margin-bottom:10px">Notes Terminal</div>
+            <textarea id="notesBox" placeholder="[Type notes here...]"></textarea>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <div>Call Timer: <span id="callTimer" style="color:#f0f6fc">00:02:34</span></div>
+    <div>Today's Volume: <span id="todayVolume">8 calls</span> | 240 total | Avg <span id="avgCall">3.2 min/call</span></div>
+    <div>System Status: <span style="color:var(--success)">🟢 LIVE</span> | All systems operational</div>
+  </footer>
+</div>
+
+<script>
+const fallbackProperties = [
+  {id:'SPR-2258',address:'2258 N Missouri Ave, Springfield MO',price:195000,dom:165,mao:140000,beds:3,baths:2,sqft:1450,condition:'Needs Work',phone:'No phone in sheet',notes:'Fallback sample',motivation:53,tag:'ACTIVE',zillow:''},
+  {id:'SPR-1840',address:'1840 W College St, Springfield MO',price:168000,dom:119,mao:121000,beds:2,baths:1,sqft:1198,condition:'Deferred Updates',phone:'No phone in sheet',notes:'Fallback sample',motivation:61,tag:'CALLBACK',zillow:''}
+];
+
+let properties = [...fallbackProperties];
+let currentIndex = 0;
+let state = { callsDone: 8, totalCalls: 240, avgCallMin: 3.2, pipelineValue: 47500, notes: {}, timerSeconds: 154, timerRunning: true };
+
+const $ = id => document.getElementById(id);
+const fmtMoney = n => '$' + Math.round(Number(n || 0)).toLocaleString();
+const pctBelow = (price, mao) => price > 0 ? Math.round(((price - mao) / price) * 100) : 0;
+
+function toNum(v){
+  if(v == null) return 0;
+  let s = String(v).trim().replace(/[$,]/g,'').replace(/\+/g,'');
+  if (/^\d+(\.\d+)?k$/i.test(s)) s = String(parseFloat(s) * 1000);
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function splitCsvLine(line){
+  const out = [];
+  let cur = '';
+  let inQuotes = false;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(ch === '"'){
+      if(inQuotes && line[i+1] === '"'){ cur += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if(ch === ',' && !inQuotes){
+      out.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
+function parseLeadCsv(text){
+  const lines = text.split(/\r?\n/).filter(line => line.trim());
+  const headerIndex = lines.findIndex(line => line.toLowerCase().includes('date added,address,price'));
+  if(headerIndex === -1) return [];
+  const headers = splitCsvLine(lines[headerIndex]).map(h => h.trim().toLowerCase());
+
+  const parsed = [];
+  for(let i = headerIndex + 1; i < lines.length; i++){
+    const cols = splitCsvLine(lines[i]);
+    const row = {};
+    headers.forEach((h, idx) => row[h] = cols[idx] ?? '');
+
+    const address = String(row['address'] || '').trim();
+    if(!address) continue;
+    if(address.toLowerCase() === 'address') continue;
+    if(address.toLowerCase().includes('script runs daily')) continue;
+    if(!address.includes(',') && !address.toLowerCase().includes('plan')) continue;
+
+    const price = toNum(row['price']);
+    const mao = toNum(row['mao (est)']);
+    if(price <= 0) continue;
+
+    parsed.push({
+      id: 'CSV-' + (parsed.length + 1),
+      address,
+      price,
+      dom: toNum(row['days on market']),
+      mao,
+      beds: toNum(row['beds']),
+      baths: toNum(row['baths']),
+      sqft: toNum(row['sqft']),
+      condition: String(row['distress signals'] || '').trim() || 'Unknown / Review',
+      phone: (()=>{
+        const keys = ['phone','phone number','phone #','phone#','owner phone','seller phone','contact phone','telephone','tel','cell','mobile','contact number','owner number'];
+        for(const k of keys){
+          const v = String(row[k] || '').trim().replace(/^["']|["']$/g,'');
+          if(v && v !== '0' && v.replace(/\D/g,'').length >= 7) return v;
+        }
+        return 'No phone in sheet';
+      })(),
+      photo: (()=>{
+        const keys = ['photo','photo url','photo_url','image','image url','image_url','photo link','pic','picture','listing photo','property photo'];
+        for(const k of keys){
+          const v = String(row[k] || '').trim();
+          if(v && (v.startsWith('http') || v.startsWith('/'))) return v;
+        }
+        return '';
+      })(),
+      notes: String(row['notes'] || row['status'] || 'Imported from CSV').trim(),
+      motivation: Math.max(5, Math.min(95, (toNum(row['motivation score']) || 2) * 18)),
+      tag: String(row['status'] || 'IMPORTED').trim().toUpperCase().slice(0, 12) || 'IMPORTED',
+      zillow: String(row['zillow url'] || row['zillow'] || '').trim()
+    });
+  }
+  return parsed;
+}
+
+function getCurrent(){ return properties[currentIndex] || properties[0]; }
+
+let currentView = 'map';
+function switchView(view){
+  currentView = view;
+  ['map','street','photo'].forEach(v => $('tab'+v.charAt(0).toUpperCase()+v.slice(1))?.classList.toggle('active', v === view));
+  updateHouseView(getCurrent());
+}
+
+function updateHouseView(p){
+  const container = $('houseView');
+  const encoded = encodeURIComponent(p.address);
+
+  if(currentView === 'photo' && p.photo){
+    container.innerHTML = `<img src="${p.photo}" alt="Property photo" onerror="this.parentElement.innerHTML='<div class=house-placeholder>📷 No image at that URL</div>'">`;
+  } else if(currentView === 'photo' && !p.photo){
+    container.innerHTML = `<div class="house-placeholder">📷 No photo URL in CSV<br><span style="font-size:11px;margin-top:4px">Add a "Photo URL" column to your sheet</span></div>`;
+  } else if(currentView === 'street'){
+    container.innerHTML = `<iframe src="https://www.google.com/maps?q=${encoded}&layer=c&output=embed" allowfullscreen loading="lazy"></iframe>`;
+  } else {
+    container.innerHTML = `<iframe src="https://maps.google.com/maps?q=${encoded}&z=18&output=embed" allowfullscreen loading="lazy"></iframe>`;
+  }
+
+  const zBtn = $('zillowBtn');
+  const noZ = $('noZillow');
+  if(p.zillow){
+    zBtn.href = p.zillow.startsWith('http') ? p.zillow : 'https://' + p.zillow;
+    zBtn.style.display = '';
+    noZ.style.display = 'none';
+  } else {
+    zBtn.style.display = 'none';
+    noZ.style.display = '';
+  }
+}
+
+function renderLeadList(){
+  const list = $('leadList');
+  list.innerHTML = '';
+  properties.forEach((p, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'lead-item' + (idx === currentIndex ? ' active' : '');
+    btn.innerHTML = `
+      <div class="lead-name">${p.address}</div>
+      <div class="lead-meta">${p.beds || 0}BR | ${p.baths || 0}BA | ${Number(p.sqft || 0).toLocaleString()} sqft</div>
+      <div class="lead-meta">List ${fmtMoney(p.price)} | MAO ${fmtMoney(p.mao)} | DOM ${p.dom || 0}</div>
+    `;
+    btn.onclick = () => { currentIndex = idx; render(); };
+    list.appendChild(btn);
+  });
+}
+
+function render(){
+  const p = getCurrent();
+  $('propertyTicker').innerHTML = `${p.id} | ${fmtMoney((p.price || 0)/1000).replace(',','')}K ↓${((p.dom || 0)/28).toFixed(1)}% DOM`;
+  $('propertyAddress').textContent = p.address;
+  $('propertySpecsTop').textContent = `${p.beds || 0}BR | ${p.baths || 0}BA | ${Number(p.sqft || 0).toLocaleString()} sqft`;
+  $('domBadge').textContent = `DOM ${p.dom || 0} ↑ ${(p.dom || 0) > 120 ? 'HIGH' : 'WATCH'}`;
+  $('listedPrice').textContent = fmtMoney(p.price);
+  $('maoValue').textContent = fmtMoney(p.mao);
+  $('maoHint').textContent = `${pctBelow(p.price, p.mao)}% below list`;
+  $('domValue').textContent = p.dom || 0;
+  $('conditionValue').textContent = p.condition || 'Unknown / Review';
+  const phoneDisplay = p.phone || 'No phone in sheet';
+  $('phoneValue').textContent = phoneDisplay;
+  const dialBtn = $('dialNowBtn');
+  const copyBtn = $('copyPhoneBtn');
+  if(p.phone && p.phone !== 'No phone in sheet'){
+    dialBtn.onclick = () => { window.location.href = 'tel:' + p.phone.replace(/\D/g,''); };
+    dialBtn.style.opacity = '1';
+    copyBtn.onclick = () => { navigator.clipboard.writeText(p.phone).then(()=>{ copyBtn.textContent='COPIED!'; setTimeout(()=>copyBtn.textContent='COPY',1500); }); };
+    copyBtn.style.opacity = '1';
+  } else {
+    dialBtn.onclick = () => $('callBtn').click();
+    dialBtn.style.opacity = '0.4';
+    copyBtn.onclick = null;
+    copyBtn.style.opacity = '0.3';
+  }
+  updateHouseView(p);
+  $('specsValue').textContent = `${p.beds || 0}BR | ${p.baths || 0}BA | ${Number(p.sqft || 0).toLocaleString()} sqft`;
+  $('notesHint').textContent = p.notes || 'Imported from CSV';
+  $('motivationText').textContent = `${p.motivation || 35}%`;
+  $('motivationBar').style.width = `${p.motivation || 35}%`;
+  $('scriptAddress').textContent = p.address.split(',')[0];
+  $('scriptPrice').textContent = fmtMoney(p.price);
+  $('scriptMao').textContent = fmtMoney(p.mao);
+  $('notesBox').value = state.notes[p.id] || '';
+  $('callsDone').textContent = state.callsDone;
+  $('todayVolume').textContent = `${state.callsDone} calls`;
+  $('avgCall').textContent = `${state.avgCallMin.toFixed(1)} min/call`;
+  $('pipelineValue').textContent = fmtMoney(state.pipelineValue);
+  $('pipelineStat').textContent = '+' + fmtMoney(Math.round(state.pipelineValue * 0.158));
+  renderLeadList();
+}
+
+$('notesBox').addEventListener('input', e => {
+  const p = getCurrent();
+  state.notes[p.id] = e.target.value;
+});
+
+$('csvFile').addEventListener('change', async e => {
+  const file = e.target.files?.[0];
+  if(!file) return;
+  const text = await file.text();
+  const parsed = parseLeadCsv(text);
+  if(!parsed.length){
+    alert('Could not parse that CSV. Make sure it came from your Google Sheet export.');
+    return;
+  }
+  properties = parsed;
+  currentIndex = 0;
+  state.pipelineValue = parsed.slice(0, 100).reduce((sum, p) => sum + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
+  render();
+  alert(`Imported ${parsed.length} leads.`);
+});
+
+$('callBtn').onclick = () => { state.callsDone += 1; state.totalCalls += 1; state.timerRunning = !state.timerRunning; render(); };
+$('nextLeadBtn').onclick = () => { currentIndex = (currentIndex + 1) % properties.length; render(); };
+$('markHotBtn').onclick = () => { const p = getCurrent(); p.tag = 'HOT'; p.motivation = Math.min(95, (p.motivation || 35) + 8); state.pipelineValue += 2500; render(); };
+$('rejectBtn').onclick = () => { const p = getCurrent(); p.tag = 'DEAD'; p.motivation = Math.max(10, (p.motivation || 35) - 15); state.pipelineValue = Math.max(0, state.pipelineValue - 1800); render(); };
+$('callbackBtn').onclick = () => { const p = getCurrent(); p.tag = 'CALLBACK'; state.pipelineValue += 750; render(); };
+
+document.addEventListener('keydown', e => {
+  if(e.target.matches('textarea,input')) return;
+  if(e.code === 'Space'){ e.preventDefault(); $('callBtn').click(); }
+  if(e.key.toLowerCase() === 'n') $('nextLeadBtn').click();
+  if(e.key.toLowerCase() === 'h') $('markHotBtn').click();
+  if(e.key.toLowerCase() === 'r') $('rejectBtn').click();
+  if(e.key.toLowerCase() === 'c') $('callbackBtn').click();
+});
+
+setInterval(() => {
+  if(state.timerRunning){
+    state.timerSeconds += 1;
+    const h = String(Math.floor(state.timerSeconds / 3600)).padStart(2,'0');
+    const m = String(Math.floor((state.timerSeconds % 3600) / 60)).padStart(2,'0');
+    const s = String(state.timerSeconds % 60).padStart(2,'0');
+    $('callTimer').textContent = `${h}:${m}:${s}`;
+  }
+}, 1000);
+
+new Chart(document.getElementById('callsChart'), {
+  type:'line',
+  data:{
+    labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    datasets:[{
+      data:[6,11,8,13,9,15,8],
+      borderColor:'#00D9FF',
+      backgroundColor:'rgba(0,217,255,.18)',
+      fill:true,
+      tension:.35,
+      pointRadius:0,
+      borderWidth:2
+    }]
+  },
+  options:{
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#8B949E',font:{family:'JetBrains Mono',size:11}},grid:{color:'rgba(255,255,255,.04)'}},
+      y:{ticks:{color:'#8B949E',font:{family:'JetBrains Mono',size:11}},grid:{color:'rgba(255,255,255,.04)'}}
+    }
+  }
+});
+
+// ---- GOOGLE SHEET LIVE SYNC -------------------------------------------------
+
+const SHEET_ID = '18oJwsncdmlaDrT2O_q3sOoOJwfB7SdKRWLO37HWAgSo';
+
+async function syncSheet() {
+  const btn = $('syncBtn');
+  const status = $('syncStatus');
+  btn.textContent = '⟳ SYNCING...';
+  status.textContent = 'Loading...';
+  status.style.color = 'var(--muted)';
+
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Sheet1&_=${Date.now()}`;
+
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+
+    // Strip the JSONP wrapper Google wraps around the JSON
+    const jsonStr = text.replace(/^[\s\S]*?setResponse\(/, '').replace(/\);\s*$/, '');
+    const data = JSON.parse(jsonStr);
+
+    const cols = data.table.cols.map(c => (c.label || c.id || '').trim().toLowerCase());
+
+    const parsed = [];
+    for (const row of (data.table.rows || [])) {
+      if (!row || !row.c) continue;
+
+      const get = name => {
+        const idx = cols.indexOf(name);
+        if (idx === -1) return '';
+        const cell = row.c[idx];
+        if (!cell || cell.v === null || cell.v === undefined) return '';
+        return String(cell.v).trim();
+      };
+
+      const address = get('address');
+      if (!address || address.toLowerCase() === 'address') continue;
+      if (address.toLowerCase().includes('script runs')) continue;
+
+      // Try both header naming styles (scraper v1 vs v2)
+      const price = toNum(get('asking price') || get('price'));
+      if (price <= 0) continue;
+
+      const phone = get('phone') || get('agent phone') || get('contact phone') || 'No phone in sheet';
+      const mao   = toNum(get('mao (est)') || get('mao') || get('offer price'));
+      const dom   = toNum(get('days on market'));
+      const score = toNum(get('motivation score') || get('score'));
+
+      parsed.push({
+        id:         'SHEET-' + (parsed.length + 1),
+        address,
+        price,
+        dom,
+        mao:        mao || Math.round(price * 0.65),
+        beds:       toNum(get('beds')),
+        baths:      toNum(get('baths')),
+        sqft:       toNum(get('sqft')),
+        condition:  get('distress signals') || get('condition') || 'Check listing',
+        phone,
+        photo:      '',
+        notes:      get('notes') || '',
+        motivation: Math.min(95, Math.max(5, score > 0 ? score * 15 : (dom > 90 ? 70 : dom > 30 ? 45 : 25))),
+        tag:        (get('status') || 'IMPORTED').toUpperCase().slice(0, 12),
+        zillow:     get('zillow url') || get('zillow') || ''
+      });
+    }
+
+    if (!parsed.length) throw new Error('No leads found in sheet');
+
+    properties = parsed;
+    currentIndex = 0;
+    state.pipelineValue = parsed.slice(0, 100).reduce((s, p) => s + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    status.textContent = `${parsed.length} leads — ${timeStr}`;
+    status.style.color = 'var(--success)';
+    btn.textContent = '⟳ SYNC SHEET';
+    render();
+    alert(`Loaded ${parsed.length} leads from your Google Sheet.`);
+
+  } catch(e) {
+    status.textContent = 'Sync failed — use CSV import';
+    status.style.color = 'var(--danger)';
+    btn.textContent = '⟳ SYNC SHEET';
+    console.warn('Sheet sync error:', e.message);
+  }
+}
+
+// Auto-sync on load
+syncSheet();
+
+render();
+</script>
+</body>
 </html>
