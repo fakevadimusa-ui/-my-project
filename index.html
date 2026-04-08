@@ -142,8 +142,8 @@
     <div class="ticker" id="propertyTicker">SPR-2258 | $195K ↓5.9% DOM</div>
     <div class="topstats">
       <span>📊 <b id="callsDone">8</b>/15 CALLS</span>
-      <span>🔥 <b id="pipelineStat">+$7.5K</b> PIPELINE</span>
-      <span>⚡ <b>3 DAY STREAK</b></span>
+      <span>📞 <b id="callsDoneToday">0</b> CALLS TODAY</span>
+      <span>⚡ <b id="streakStat">0 DAY</b> STREAK</span>
     </div>
   </header>
 
@@ -151,36 +151,34 @@
     <section class="left">
       <div class="scroll">
         <div class="head">
-          <div class="title">Pipeline Dashboard</div>
+          <div class="title">Controls</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="chip" id="syncBtn" onclick="syncSheet()" style="cursor:pointer;border-color:rgba(0,217,255,.3);color:var(--accent)">⟳ SYNC SHEET</button>
+            <button class="chip" id="syncBtn" onclick="syncSheet()" style="cursor:pointer;border-color:rgba(0,217,255,.3);color:var(--accent)">⟳ SYNC</button>
             <button class="chip" id="freshToggle" onclick="toggleFresh()" style="cursor:pointer;border-color:rgba(63,185,80,.3);color:var(--success)">FRESH ONLY</button>
-            <label class="chip" for="csvFile" style="cursor:pointer">IMPORT CSV</label>
+            <label class="chip" for="csvFile" style="cursor:pointer;font-size:11px">CSV</label>
             <input id="csvFile" type="file" accept=".csv" style="display:none">
-            <div class="chip" id="syncStatus" style="font-size:11px">Not synced</div>
           </div>
         </div>
+        <div class="chip" id="syncStatus" style="font-size:11px;margin-bottom:4px;display:block;width:100%">Not synced</div>
 
-        <div class="card">
-          <div class="sub">Total Pipeline Value</div>
-          <div class="big-green" id="pipelineValue">$47,500</div>
-          <div class="sub">Live desk total across active prospects</div>
-          <div style="height:120px;margin-top:16px"><canvas id="callsChart"></canvas></div>
+        <!-- Bible Verse -->
+        <div class="card" style="border-color:rgba(0,217,255,.18);min-height:160px;display:flex;flex-direction:column;justify-content:space-between">
+          <div class="title" style="margin-bottom:12px">WORD FOR TODAY</div>
+          <div id="verseText" style="font-size:15px;line-height:1.7;color:#f0f6fc;font-style:italic;flex:1">"Loading..."</div>
+          <div id="verseRef" style="font-size:11px;color:var(--accent);font-family:'JetBrains Mono',monospace;margin-top:12px;text-align:right"></div>
         </div>
 
-        <div class="watchlist">
-          <div class="watch-item"><strong>🔥 HOT LEADS</strong><div class="sub">Motivation spike detected</div></div>
-          <div class="watch-item"><strong>📞 CALLBACKS</strong><div class="sub">Queue needs action</div></div>
-          <div class="watch-item"><strong>✅ CLOSED TODAY</strong><div class="sub">Track contracts locked</div></div>
-          <div class="watch-item"><strong>❌ DEAD LEADS</strong><div class="sub">Out of funnel</div></div>
-        </div>
-
-        <div class="head"><div class="title">Desk Metrics</div></div>
+        <!-- Today's session stats -->
+        <div class="head" style="margin-top:4px"><div class="title">Today's Session</div></div>
         <div class="stats">
-          <div class="stat-card"><div class="sub">Win Rate</div><div class="stat-value" style="color:var(--success)">15%</div></div>
-          <div class="stat-card"><div class="sub">Avg Response</div><div class="stat-value">2.3 days</div></div>
-          <div class="stat-card"><div class="sub">Best Lead</div><div class="stat-value" style="font-size:20px">Imported Queue</div></div>
+          <div class="stat-card"><div class="sub">Calls Made</div><div class="stat-value" style="color:var(--primary)" id="statCalls">0</div></div>
+          <div class="stat-card"><div class="sub">Hot Leads</div><div class="stat-value" style="color:var(--warning)" id="statHot">0</div></div>
+          <div class="stat-card"><div class="sub">Callbacks</div><div class="stat-value" style="color:var(--accent)" id="statCallback">0</div></div>
+          <div class="stat-card"><div class="sub">Fresh Left</div><div class="stat-value" style="color:var(--success)" id="statFresh">—</div></div>
         </div>
+
+        <div class="head" style="margin-top:4px"><div class="title">Lead Queue</div></div>
+        <div class="lead-list" id="leadList"></div>
       </div>
     </section>
 
@@ -249,12 +247,11 @@
           <button class="btn skip" id="nextLeadBtn">🔵 NEXT LEAD ➡</button>
           <button class="btn hot" id="markHotBtn">⭐ MARK HOT</button>
           <button class="btn reject" id="rejectBtn">❌ REJECT</button>
-          <button class="btn callback" id="callbackBtn">⏰ SCHEDULE CALLBACK</button>
+          <button class="btn" id="backBtn" style="background:linear-gradient(180deg,rgba(139,148,158,.14),rgba(139,148,158,.06))">← GO BACK</button>
+          <button class="btn" id="refreshBtn" style="background:linear-gradient(180deg,rgba(0,217,255,.14),rgba(0,217,255,.06));color:var(--accent)" onclick="syncSheet()">↺ REFRESH LEADS</button>
+          <button class="btn callback" id="callbackBtn" style="grid-column:1/-1">⏰ SCHEDULE CALLBACK</button>
         </div>
 
-        <div style="height:16px"></div>
-        <div class="head"><div class="title">Lead Queue</div></div>
-        <div class="lead-list" id="leadList"></div>
       </div>
     </section>
 
@@ -502,8 +499,8 @@ function render(){
   $('todayVolume').textContent = `${state.callsDone} calls`;
   $('avgCall').textContent = `${state.avgCallMin.toFixed(1)} min/call`;
   $('pipelineValue').textContent = fmtMoney(state.pipelineValue);
-  $('pipelineStat').textContent = '+' + fmtMoney(Math.round(state.pipelineValue * 0.158));
   renderLeadList();
+  updateSessionStats();
 }
 
 $('notesBox').addEventListener('input', e => {
@@ -525,6 +522,70 @@ $('csvFile').addEventListener('change', async e => {
   state.pipelineValue = allProperties.slice(0, 100).reduce((sum, p) => sum + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
   alert(`Imported ${parsed.length} leads. ${parsed.filter(p=>p.phone && p.phone!=='No phone in sheet').length} have phone numbers.`);
 });
+
+// ---- BIBLE VERSES -----------------------------------------------------------
+const VERSES = [
+  {text:"Commit to the Lord whatever you do, and he will establish your plans.",ref:"Proverbs 16:3"},
+  {text:"Do you see someone skilled in their work? They will serve before kings; they will not serve before officials of low rank.",ref:"Proverbs 22:29"},
+  {text:"I can do all this through him who gives me strength.",ref:"Philippians 4:13"},
+  {text:"Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.",ref:"Joshua 1:9"},
+  {text:"And we know that in all things God works for the good of those who love him, who have been called according to his purpose.",ref:"Romans 8:28"},
+  {text:"The plans of the diligent lead to profit as surely as haste leads to poverty.",ref:"Proverbs 21:5"},
+  {text:"Ask and it will be given to you; seek and you will find; knock and the door will be opened to you.",ref:"Matthew 7:7"},
+  {text:"Lazy hands make for poverty, but diligent hands bring wealth.",ref:"Proverbs 10:4"},
+  {text:"For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.",ref:"Jeremiah 29:11"},
+  {text:"The Lord will open the heavens, the storehouse of his bounty, to send rain on your land in season and to bless all the work of your hands.",ref:"Deuteronomy 28:12"},
+  {text:"Trust in the Lord with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.",ref:"Proverbs 3:5-6"},
+  {text:"Whoever sows sparingly will also reap sparingly, and whoever sows generously will also reap generously.",ref:"2 Corinthians 9:6"},
+  {text:"Whatever you do, work at it with all your heart, as working for the Lord, not for human masters.",ref:"Colossians 3:23"},
+  {text:"Now to him who is able to do immeasurably more than all we ask or imagine, according to his power that is at work within us.",ref:"Ephesians 3:20"},
+  {text:"Seek first his kingdom and his righteousness, and all these things will be given to you as well.",ref:"Matthew 6:33"},
+  {text:"A generous person will prosper; whoever refreshes others will be refreshed.",ref:"Proverbs 11:25"},
+  {text:"The Lord is my shepherd, I lack nothing.",ref:"Psalm 23:1"},
+  {text:"No weapon forged against you will prevail.",ref:"Isaiah 54:17"},
+  {text:"Have I not commanded you? Be strong and courageous.",ref:"Joshua 1:9"},
+  {text:"But those who hope in the Lord will renew their strength. They will soar on wings like eagles.",ref:"Isaiah 40:31"},
+  {text:"Bring the whole tithe into the storehouse... and see if I will not throw open the floodgates of heaven and pour out so much blessing that there will not be room enough to store it.",ref:"Malachi 3:10"},
+  {text:"The blessing of the Lord brings wealth, without painful toil for it.",ref:"Proverbs 10:22"},
+  {text:"With God all things are possible.",ref:"Matthew 19:26"},
+  {text:"Delight yourself in the Lord, and he will give you the desires of your heart.",ref:"Psalm 37:4"},
+  {text:"Do not grow weary in doing good, for at the proper time we will reap a harvest if we do not give up.",ref:"Galatians 6:9"},
+];
+
+let verseIndex = 0;
+function showVerse(){
+  const v = VERSES[verseIndex % VERSES.length];
+  const el = document.getElementById('verseText');
+  const ref = document.getElementById('verseRef');
+  if(el) el.textContent = `"${v.text}"`;
+  if(ref) ref.textContent = `— ${v.ref}`;
+  verseIndex++;
+}
+showVerse();
+setInterval(showVerse, 60000);
+
+// ---- SESSION STATS ----------------------------------------------------------
+function updateSessionStats(){
+  const log = JSON.parse(localStorage.getItem('kbros_call_log') || '[]');
+  const today = log.filter(e => new Date(e.ts).toDateString() === new Date().toDateString());
+  const calls = today.length;
+  const hot   = today.filter(e => e.action === 'HOT').length;
+  const cb    = today.filter(e => e.action === 'CALLBACK').length;
+  const fresh = properties.filter(p => !p.notes || !p.notes.trim()).length;
+
+  const s = id => document.getElementById(id);
+  if(s('statCalls'))    s('statCalls').textContent    = calls;
+  if(s('statHot'))      s('statHot').textContent      = hot;
+  if(s('statCallback')) s('statCallback').textContent = cb;
+  if(s('statFresh'))    s('statFresh').textContent    = fresh;
+  if(s('callsDoneToday')) s('callsDoneToday').textContent = calls;
+
+  // streak
+  const days = new Set(log.map(e => new Date(e.ts).toDateString()));
+  let streak = 0, d = new Date();
+  while(days.has(d.toDateString())){ streak++; d.setDate(d.getDate()-1); }
+  if(s('streakStat')) s('streakStat').textContent = `${streak} DAY`;
+}
 
 // ---- CALL LOG ---------------------------------------------------------------
 const LOG_KEY = 'kbros_call_log';
@@ -560,21 +621,30 @@ function applyFilter(){
   render();
 }
 
+let prevIndex = 0;
+
 $('callBtn').onclick = () => {
   logAction('CALLED');
-  state.callsDone += 1; state.totalCalls += 1; state.timerRunning = !state.timerRunning; render();
+  state.callsDone += 1; state.totalCalls += 1; state.timerRunning = !state.timerRunning;
+  render(); updateSessionStats();
 };
-$('nextLeadBtn').onclick = () => { currentIndex = (currentIndex + 1) % properties.length; render(); };
+$('nextLeadBtn').onclick = () => {
+  prevIndex = currentIndex;
+  currentIndex = (currentIndex + 1) % properties.length; render();
+};
+$('backBtn').onclick = () => {
+  const tmp = currentIndex; currentIndex = prevIndex; prevIndex = tmp; render();
+};
 $('markHotBtn').onclick = () => {
   const p = getCurrent(); p.tag = 'HOT'; p.motivation = Math.min(95, (p.motivation || 35) + 8);
-  state.pipelineValue += 2500; logAction('HOT'); render();
+  logAction('HOT'); render(); updateSessionStats();
 };
 $('rejectBtn').onclick = () => {
   const p = getCurrent(); p.tag = 'DEAD'; p.motivation = Math.max(10, (p.motivation || 35) - 15);
-  state.pipelineValue = Math.max(0, state.pipelineValue - 1800); logAction('REJECT'); render();
+  logAction('REJECT'); render(); updateSessionStats();
 };
 $('callbackBtn').onclick = () => {
-  const p = getCurrent(); p.tag = 'CALLBACK'; state.pipelineValue += 750; logAction('CALLBACK'); render();
+  const p = getCurrent(); p.tag = 'CALLBACK'; logAction('CALLBACK'); render(); updateSessionStats();
 };
 
 document.addEventListener('keydown', e => {
