@@ -394,6 +394,17 @@ function parseLeadCsv(text){
 
 function getCurrent(){ return properties[currentIndex] || properties[0]; }
 
+function sortLeads(arr){
+  // Phone numbers first, then by DOM descending (oldest = most motivated)
+  return [...arr].sort((a, b) => {
+    const aHasPhone = a.phone && a.phone !== 'No phone in sheet' && a.phone !== 'No phone found';
+    const bHasPhone = b.phone && b.phone !== 'No phone in sheet' && b.phone !== 'No phone found';
+    if(aHasPhone && !bHasPhone) return -1;
+    if(!aHasPhone && bHasPhone) return 1;
+    return (b.dom || 0) - (a.dom || 0);
+  });
+}
+
 let currentView = 'map';
 function switchView(view){
   currentView = view;
@@ -433,9 +444,14 @@ function renderLeadList(){
   properties.forEach((p, idx) => {
     const btn = document.createElement('button');
     btn.className = 'lead-item' + (idx === currentIndex ? ' active' : '');
+    const hasPhone = p.phone && p.phone !== 'No phone in sheet' && p.phone !== 'No phone found';
+    const zillowLink = p.zillow ? `<a href="${p.zillow.startsWith('http') ? p.zillow : 'https://'+p.zillow}" target="_blank" onclick="event.stopPropagation()" style="color:var(--primary);font-size:11px;text-decoration:none;margin-left:6px">↗ Zillow</a>` : '';
     btn.innerHTML = `
-      <div class="lead-name">${p.address}</div>
-      <div class="lead-meta">${p.beds || 0}BR | ${p.baths || 0}BA | ${Number(p.sqft || 0).toLocaleString()} sqft</div>
+      <div class="lead-name" style="display:flex;align-items:center;justify-content:space-between">
+        <span>${p.address}</span>
+        ${hasPhone ? `<span style="color:var(--success);font-size:10px;font-family:'JetBrains Mono',monospace">📞 ${p.phone}</span>` : '<span style="color:var(--muted);font-size:10px">no phone</span>'}
+      </div>
+      <div class="lead-meta">${p.beds || 0}BR | ${p.baths || 0}BA | ${Number(p.sqft || 0).toLocaleString()} sqft${zillowLink}</div>
       <div class="lead-meta">List ${fmtMoney(p.price)} | MAO ${fmtMoney(p.mao)} | DOM ${p.dom || 0}</div>
     `;
     btn.onclick = () => { currentIndex = idx; render(); };
@@ -500,11 +516,11 @@ $('csvFile').addEventListener('change', async e => {
     alert('Could not parse that CSV. Make sure it came from your Google Sheet export.');
     return;
   }
-  properties = parsed;
+  properties = sortLeads(parsed);
   currentIndex = 0;
-  state.pipelineValue = parsed.slice(0, 100).reduce((sum, p) => sum + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
+  state.pipelineValue = properties.slice(0, 100).reduce((sum, p) => sum + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
   render();
-  alert(`Imported ${parsed.length} leads.`);
+  alert(`Imported ${parsed.length} leads. ${properties.filter(p=>p.phone && p.phone!=='No phone in sheet').length} have phone numbers.`);
 });
 
 $('callBtn').onclick = () => { state.callsDone += 1; state.totalCalls += 1; state.timerRunning = !state.timerRunning; render(); };
@@ -627,9 +643,9 @@ async function syncSheet() {
 
     if (!parsed.length) throw new Error('No leads found in sheet');
 
-    properties = parsed;
+    properties = sortLeads(parsed);
     currentIndex = 0;
-    state.pipelineValue = parsed.slice(0, 100).reduce((s, p) => s + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
+    state.pipelineValue = properties.slice(0, 100).reduce((s, p) => s + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
 
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
