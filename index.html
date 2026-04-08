@@ -259,28 +259,63 @@
       <div class="scroll">
         <div class="head"><div class="title">Call Script v2.3</div></div>
         <div class="script-panel">
+
           <div class="terminal">
-            <div>&gt; OPENING:</div>
-            <div>"Hi, I'm Vadim with K Brothers in Springfield.</div>
-            <div>Saw your property at <span id="scriptAddress">2258 N Missouri Ave</span></div>
-            <div>for <span id="scriptPrice">$195,000</span>. Still selling?"</div>
+            <div style="color:var(--accent);margin-bottom:6px">OPENING — keep it casual</div>
+            <div style="color:#f0f6fc;line-height:1.8">
+              "Hey, is this the owner of <span id="scriptAddress" style="color:var(--warning)">the property</span>?
+              Hey — my name's Vadim, I'm a local buyer here in Springfield.
+              I came across your place listed around <span id="scriptPrice" style="color:var(--warning)">that price</span>
+              and just wanted to reach out real quick — is it still available?"
+            </div>
           </div>
+
           <div class="terminal">
-            <div>&gt; IF YES → ASK:</div>
-            <div>□ Why selling?</div>
-            <div>□ Timeline?</div>
-            <div>□ Condition?</div>
-            <div>□ Lowest price?</div>
+            <div style="color:var(--accent);margin-bottom:6px">IF YES — just have a conversation</div>
+            <div style="line-height:2">
+              <div>→ <span style="color:#f0f6fc">"What's your situation with it — are you in a rush or pretty flexible?"</span></div>
+              <div>→ <span style="color:#f0f6fc">"How long you had it on the market?"</span></div>
+              <div>→ <span style="color:#f0f6fc">"What's the condition like inside — anything it needs?"</span></div>
+              <div>→ <span style="color:#f0f6fc">"If I came in with a cash offer, what's the lowest you'd honestly take?"</span></div>
+            </div>
           </div>
+
           <div class="terminal">
-            <div>&gt; OFFER PROTOCOL:</div>
-            <div>If motivated → Offer <span id="scriptMao">$140,000</span></div>
-            <div>If hesitant → Schedule callback</div>
-            <div>If hostile → Next lead</div>
+            <div style="color:var(--accent);margin-bottom:6px">MAKING THE OFFER</div>
+            <div style="color:#f0f6fc;line-height:1.8">
+              "Okay so based on what you're telling me and what I'm seeing —
+              I could probably come in around <span id="scriptMao" style="color:var(--success);font-weight:700">your MAO</span>.
+              I know that's not your asking price, but I close fast, no agents,
+              no fees, no repairs — you just pick a date and we close. Does that work for you?"
+            </div>
           </div>
+
+          <div class="terminal">
+            <div style="color:var(--warning);margin-bottom:8px">OBJECTION HANDLERS</div>
+            <div style="line-height:2.2;font-size:12px">
+              <div style="color:var(--muted)">"That's too low"</div>
+              <div style="color:#f0f6fc;margin-bottom:6px;margin-left:12px">→ "Yeah I hear you — what number would actually work for you? Let's see if we can meet somewhere."</div>
+
+              <div style="color:var(--muted)">"I'm working with an agent"</div>
+              <div style="color:#f0f6fc;margin-bottom:6px;margin-left:12px">→ "No problem at all, I can work with your agent. I just move faster than a traditional buyer."</div>
+
+              <div style="color:var(--muted)">"I need to think about it"</div>
+              <div style="color:#f0f6fc;margin-bottom:6px;margin-left:12px">→ "Totally, I get it. When's a good time to follow up — tomorrow or later this week?"</div>
+
+              <div style="color:var(--muted)">"Is this cash?"</div>
+              <div style="color:#f0f6fc;margin-bottom:6px;margin-left:12px">→ "Yes — cash, as-is, no inspection contingencies. Close in as little as two weeks."</div>
+
+              <div style="color:var(--muted)">"What company are you with?"</div>
+              <div style="color:#f0f6fc;margin-bottom:6px;margin-left:12px">→ "K Brothers — we're a local investment group here in Springfield. We buy, fix up, and either rent or resell."</div>
+
+              <div style="color:var(--muted)">"Not interested" / Hangs up</div>
+              <div style="color:#f0f6fc;margin-left:12px">→ Mark REJECT, move on. Next call is the deal.</div>
+            </div>
+          </div>
+
           <div>
-            <div class="title" style="margin-bottom:10px">Notes Terminal</div>
-            <textarea id="notesBox" placeholder="[Type notes here...]"></textarea>
+            <div class="title" style="margin-bottom:10px">Call Notes</div>
+            <textarea id="notesBox" placeholder="Type notes here — motivation, price they'd take, timeline, anything they said..."></textarea>
           </div>
         </div>
       </div>
@@ -498,7 +533,6 @@ function render(){
   $('callsDone').textContent = state.callsDone;
   $('todayVolume').textContent = `${state.callsDone} calls`;
   $('avgCall').textContent = `${state.avgCallMin.toFixed(1)} min/call`;
-  $('pipelineValue').textContent = fmtMoney(state.pipelineValue);
   renderLeadList();
   updateSessionStats();
 }
@@ -612,12 +646,18 @@ function toggleFresh(){
   btn.textContent = freshOnly ? 'FRESH ONLY' : 'SHOW ALL';
   applyFilter();
 }
-function applyFilter(){
+function applyFilter(preserveAddress){
   const pool = freshOnly
     ? allProperties.filter(p => !p.notes || p.notes.trim() === '')
     : allProperties;
   properties = sortLeads(pool);
-  currentIndex = 0;
+  // Stay on the same lead after a sync/filter — don't jump back to top
+  if(preserveAddress){
+    const idx = properties.findIndex(p => p.address === preserveAddress);
+    currentIndex = idx >= 0 ? idx : 0;
+  } else {
+    currentIndex = 0;
+  }
   render();
 }
 
@@ -761,8 +801,9 @@ async function syncSheet() {
 
     if (!parsed.length) throw new Error('No leads found in sheet');
 
+    const wasOn = getCurrent()?.address;
     allProperties = parsed;
-    applyFilter();
+    applyFilter(wasOn);
     state.pipelineValue = allProperties.slice(0, 100).reduce((s, p) => s + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
 
     const now = new Date();
