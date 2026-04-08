@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KBros Call Log</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&f[]=jet-brains-mono@400,600,700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0D1117;--card:#161B22;--border:#30363D;--primary:#58A6FF;
+      --success:#3FB950;--warning:#D29922;--danger:#F85149;--text:#C9D1D9;--muted:#8B949E;--accent:#00D9FF;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Satoshi',sans-serif;min-height:100vh}
+    body{
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),
+        var(--bg);
+      background-size:28px 28px;
+    }
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:64px;
+      background:rgba(13,17,23,.95);backdrop-filter:blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;z-index:10
+    }
+    .brand{font:800 15px 'JetBrains Mono',monospace;letter-spacing:.08em}
+    .brand span{color:var(--accent)}
+    .nav-link{
+      padding:8px 16px;border-radius:10px;background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.2);
+      color:var(--primary);font:700 12px 'JetBrains Mono',monospace;text-decoration:none
+    }
+    .page{max-width:1100px;margin:0 auto;padding:24px 18px}
+    .date-header{
+      font:900 32px 'Satoshi',sans-serif;color:#f0f6fc;margin-bottom:4px
+    }
+    .date-sub{font-size:14px;color:var(--muted);margin-bottom:28px;font-family:'JetBrains Mono',monospace}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px}
+    .stat{
+      background:linear-gradient(180deg,rgba(22,27,34,.98),rgba(17,22,29,.98));
+      border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px
+    }
+    .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;font-family:'JetBrains Mono',monospace}
+    .stat-val{font:800 28px 'JetBrains Mono',monospace;color:#f0f6fc}
+    .section-title{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:800;margin-bottom:14px}
+    .log-table{width:100%;border-collapse:collapse;margin-bottom:32px}
+    .log-table th{
+      text-align:left;padding:10px 14px;font:700 11px 'JetBrains Mono',monospace;
+      text-transform:uppercase;letter-spacing:.1em;color:var(--muted);
+      border-bottom:1px solid rgba(255,255,255,.06)
+    }
+    .log-table td{
+      padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);
+      font-size:13px;vertical-align:middle
+    }
+    .log-table tr:hover td{background:rgba(255,255,255,.02)}
+    .badge{
+      display:inline-block;padding:3px 10px;border-radius:999px;
+      font:700 11px 'JetBrains Mono',monospace
+    }
+    .badge-hot{background:rgba(210,153,34,.15);border:1px solid rgba(210,153,34,.3);color:var(--warning)}
+    .badge-call{background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.25);color:var(--primary)}
+    .badge-callback{background:rgba(0,217,255,.1);border:1px solid rgba(0,217,255,.25);color:var(--accent)}
+    .badge-reject{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.25);color:var(--danger)}
+    .empty{padding:40px;text-align:center;color:var(--muted);font-size:14px;font-family:'JetBrains Mono',monospace}
+    .clear-btn{
+      padding:8px 16px;border-radius:10px;background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.2);
+      color:var(--danger);font:700 12px 'JetBrains Mono',monospace;cursor:pointer;float:right
+    }
+    .phone-cell{font-family:'JetBrains Mono',monospace;color:var(--success);font-size:12px}
+    .addr-cell{font-weight:700;color:#f0f6fc;max-width:280px}
+    .time-cell{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+    .tab-row{display:flex;gap:10px;margin-bottom:20px}
+    .tab{
+      padding:8px 18px;border-radius:10px;background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);font:700 12px 'JetBrains Mono',monospace;
+      color:var(--muted);cursor:pointer
+    }
+    .tab.active{background:rgba(0,217,255,.12);border-color:rgba(0,217,255,.3);color:var(--accent)}
+    .streak{font-size:13px;color:var(--success);font-family:'JetBrains Mono',monospace;margin-bottom:20px}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">VADIM <span>CAPITAL</span> | CALL LOG</div>
+  <a href="index.html" class="nav-link">← BACK TO DESK</a>
+</div>
+
+<div class="page">
+  <div class="date-header" id="dateHeader"></div>
+  <div class="date-sub" id="dateSub"></div>
+  <div class="streak" id="streakLine"></div>
+
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <div class="tab-row">
+    <button class="tab active" onclick="showTab('today')">TODAY</button>
+    <button class="tab" onclick="showTab('week')">THIS WEEK</button>
+    <button class="tab" onclick="showTab('all')">ALL TIME</button>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div class="section-title" id="logTitle">TODAY'S CALLS</div>
+    <button class="clear-btn" onclick="clearLog()">CLEAR ALL</button>
+  </div>
+
+  <table class="log-table">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Address</th>
+        <th>Phone</th>
+        <th>Action</th>
+        <th>List Price</th>
+        <th>MAO</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody id="logBody"></tbody>
+  </table>
+</div>
+
+<script>
+const LOG_KEY = 'kbros_call_log';
+
+function getLog(){ return JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); }
+
+function fmtMoney(n){ return n ? '$' + Math.round(Number(n)).toLocaleString() : '—'; }
+
+function fmtTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+function fmtDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString([],{month:'short',day:'numeric'});
+}
+
+function isToday(ts){
+  const d = new Date(ts), n = new Date();
+  return d.toDateString() === n.toDateString();
+}
+
+function isThisWeek(ts){
+  const now = Date.now();
+  return now - ts < 7 * 24 * 60 * 60 * 1000;
+}
+
+function badgeClass(action){
+  if(action === 'HOT') return 'badge-hot';
+  if(action === 'REJECT') return 'badge-reject';
+  if(action === 'CALLBACK') return 'badge-callback';
+  return 'badge-call';
+}
+
+let currentTab = 'today';
+
+function filterLog(tab){
+  const all = getLog().slice().reverse();
+  if(tab === 'today') return all.filter(e => isToday(e.ts));
+  if(tab === 'week')  return all.filter(e => isThisWeek(e.ts));
+  return all;
+}
+
+function showTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['today','week','all'][i] === tab);
+  });
+  const titles = {today:"TODAY'S CALLS", week:"THIS WEEK'S CALLS", all:"ALL TIME CALLS"};
+  document.getElementById('logTitle').textContent = titles[tab];
+  renderLog();
+}
+
+function renderLog(){
+  const entries = filterLog(currentTab);
+  const body = document.getElementById('logBody');
+  if(!entries.length){
+    body.innerHTML = `<tr><td colspan="7"><div class="empty">No calls logged yet — go make some money.</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = entries.map(e => `
+    <tr>
+      <td class="time-cell">${fmtDate(e.ts)}<br>${fmtTime(e.ts)}</td>
+      <td class="addr-cell">${e.address || '—'}</td>
+      <td class="phone-cell">${e.phone || '—'}</td>
+      <td><span class="badge ${badgeClass(e.action)}">${e.action}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${fmtMoney(e.price)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#3FB950">${fmtMoney(e.mao)}</td>
+      <td style="font-size:12px;color:var(--muted);max-width:180px">${e.notes || ''}</td>
+    </tr>
+  `).join('');
+}
+
+function renderStats(){
+  const all   = getLog();
+  const today = all.filter(e => isToday(e.ts));
+  const week  = all.filter(e => isThisWeek(e.ts));
+
+  const stats = [
+    {label:'Calls Today',   val: today.length,                               color:'var(--primary)'},
+    {label:'Hot Today',     val: today.filter(e=>e.action==='HOT').length,   color:'var(--warning)'},
+    {label:'Callbacks',     val: today.filter(e=>e.action==='CALLBACK').length, color:'var(--accent)'},
+    {label:'This Week',     val: week.length,                                color:'#f0f6fc'},
+    {label:'All Time',      val: all.length,                                 color:'#f0f6fc'},
+    {label:'Hot All Time',  val: all.filter(e=>e.action==='HOT').length,     color:'var(--warning)'},
+  ];
+
+  document.getElementById('statsGrid').innerHTML = stats.map(s => `
+    <div class="stat">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-val" style="color:${s.color}">${s.val}</div>
+    </div>
+  `).join('');
+
+  // Streak
+  const days = new Set(all.map(e => new Date(e.ts).toDateString()));
+  let streak = 0, d = new Date();
+  while(days.has(d.toDateString())){ streak++; d.setDate(d.getDate()-1); }
+  document.getElementById('streakLine').textContent = streak > 0 ? `⚡ ${streak}-day calling streak` : '';
+}
+
+function clearLog(){
+  if(confirm('Clear entire call log? This cannot be undone.')) {
+    localStorage.removeItem(LOG_KEY);
+    renderStats();
+    renderLog();
+  }
+}
+
+function init(){
+  const now = new Date();
+  document.getElementById('dateHeader').textContent = now.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  document.getElementById('dateSub').textContent = `Session started ${now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} — go get it.`;
+  renderStats();
+  renderLog();
+}
+
+init();
+</script>
+</body>
+</html>

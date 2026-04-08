@@ -135,7 +135,10 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">VADIM <span>CAPITAL</span> | WHOLESALING DESK</div>
+    <div class="brand" style="display:flex;align-items:center;gap:16px">
+      VADIM <span>CAPITAL</span> | WHOLESALING DESK
+      <a href="log.html" style="font-size:11px;padding:5px 12px;border-radius:8px;background:rgba(0,217,255,.1);border:1px solid rgba(0,217,255,.2);color:var(--accent);text-decoration:none;font-family:'JetBrains Mono',monospace;font-weight:700">📋 LOG</a>
+    </div>
     <div class="ticker" id="propertyTicker">SPR-2258 | $195K ↓5.9% DOM</div>
     <div class="topstats">
       <span>📊 <b id="callsDone">8</b>/15 CALLS</span>
@@ -151,6 +154,7 @@
           <div class="title">Pipeline Dashboard</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="chip" id="syncBtn" onclick="syncSheet()" style="cursor:pointer;border-color:rgba(0,217,255,.3);color:var(--accent)">⟳ SYNC SHEET</button>
+            <button class="chip" id="freshToggle" onclick="toggleFresh()" style="cursor:pointer;border-color:rgba(63,185,80,.3);color:var(--success)">FRESH ONLY</button>
             <label class="chip" for="csvFile" style="cursor:pointer">IMPORT CSV</label>
             <input id="csvFile" type="file" accept=".csv" style="display:none">
             <div class="chip" id="syncStatus" style="font-size:11px">Not synced</div>
@@ -516,18 +520,62 @@ $('csvFile').addEventListener('change', async e => {
     alert('Could not parse that CSV. Make sure it came from your Google Sheet export.');
     return;
   }
-  properties = sortLeads(parsed);
-  currentIndex = 0;
-  state.pipelineValue = properties.slice(0, 100).reduce((sum, p) => sum + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
-  render();
-  alert(`Imported ${parsed.length} leads. ${properties.filter(p=>p.phone && p.phone!=='No phone in sheet').length} have phone numbers.`);
+  allProperties = parsed;
+  applyFilter();
+  state.pipelineValue = allProperties.slice(0, 100).reduce((sum, p) => sum + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
+  alert(`Imported ${parsed.length} leads. ${parsed.filter(p=>p.phone && p.phone!=='No phone in sheet').length} have phone numbers.`);
 });
 
-$('callBtn').onclick = () => { state.callsDone += 1; state.totalCalls += 1; state.timerRunning = !state.timerRunning; render(); };
+// ---- CALL LOG ---------------------------------------------------------------
+const LOG_KEY = 'kbros_call_log';
+function logAction(action, extra){
+  const p = getCurrent();
+  const entry = {
+    ts: Date.now(), address: p.address, phone: p.phone,
+    action, price: p.price, mao: p.mao,
+    notes: state.notes[p.id] || '', ...extra
+  };
+  const log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+  log.push(entry);
+  localStorage.setItem(LOG_KEY, JSON.stringify(log));
+}
+
+// ---- FRESH FILTER -----------------------------------------------------------
+let freshOnly = true;
+let allProperties = [];
+function toggleFresh(){
+  freshOnly = !freshOnly;
+  const btn = $('freshToggle');
+  btn.style.borderColor = freshOnly ? 'rgba(63,185,80,.3)' : 'rgba(255,255,255,.1)';
+  btn.style.color = freshOnly ? 'var(--success)' : 'var(--muted)';
+  btn.textContent = freshOnly ? 'FRESH ONLY' : 'SHOW ALL';
+  applyFilter();
+}
+function applyFilter(){
+  const pool = freshOnly
+    ? allProperties.filter(p => !p.notes || p.notes.trim() === '')
+    : allProperties;
+  properties = sortLeads(pool);
+  currentIndex = 0;
+  render();
+}
+
+$('callBtn').onclick = () => {
+  logAction('CALLED');
+  state.callsDone += 1; state.totalCalls += 1; state.timerRunning = !state.timerRunning; render();
+};
 $('nextLeadBtn').onclick = () => { currentIndex = (currentIndex + 1) % properties.length; render(); };
-$('markHotBtn').onclick = () => { const p = getCurrent(); p.tag = 'HOT'; p.motivation = Math.min(95, (p.motivation || 35) + 8); state.pipelineValue += 2500; render(); };
-$('rejectBtn').onclick = () => { const p = getCurrent(); p.tag = 'DEAD'; p.motivation = Math.max(10, (p.motivation || 35) - 15); state.pipelineValue = Math.max(0, state.pipelineValue - 1800); render(); };
-$('callbackBtn').onclick = () => { const p = getCurrent(); p.tag = 'CALLBACK'; state.pipelineValue += 750; render(); };
+$('markHotBtn').onclick = () => {
+  const p = getCurrent(); p.tag = 'HOT'; p.motivation = Math.min(95, (p.motivation || 35) + 8);
+  state.pipelineValue += 2500; logAction('HOT'); render();
+};
+$('rejectBtn').onclick = () => {
+  const p = getCurrent(); p.tag = 'DEAD'; p.motivation = Math.max(10, (p.motivation || 35) - 15);
+  state.pipelineValue = Math.max(0, state.pipelineValue - 1800); logAction('REJECT'); render();
+};
+$('callbackBtn').onclick = () => {
+  const p = getCurrent(); p.tag = 'CALLBACK'; state.pipelineValue += 750; logAction('CALLBACK'); render();
+};
 
 document.addEventListener('keydown', e => {
   if(e.target.matches('textarea,input')) return;
@@ -643,9 +691,9 @@ async function syncSheet() {
 
     if (!parsed.length) throw new Error('No leads found in sheet');
 
-    properties = sortLeads(parsed);
-    currentIndex = 0;
-    state.pipelineValue = properties.slice(0, 100).reduce((s, p) => s + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
+    allProperties = parsed;
+    applyFilter();
+    state.pipelineValue = allProperties.slice(0, 100).reduce((s, p) => s + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
 
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});

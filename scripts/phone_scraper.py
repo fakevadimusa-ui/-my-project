@@ -121,7 +121,7 @@ def find_col(headers, names):
 
 # ---- MAIN --------------------------------------------------------------------
 
-def main():
+def main(new_only=False, limit=50):
     print("=" * 65)
     print("  KBros Phone Scraper - Zillow URL -> Phone Column")
     print("=" * 65)
@@ -160,25 +160,30 @@ def main():
         return
 
     # Count workload
-    # Rule: Notes empty = fresh lead, scrape phone
-    #       Notes has content = already worked, skip
     rows_to_do = []
     skipped_worked = 0
     skipped_has_phone = 0
-    for row_idx, row in enumerate(all_values[1:], start=2):
+
+    data_rows = list(enumerate(all_values[1:], start=2))
+    if new_only:
+        data_rows = list(reversed(data_rows))  # scan newest first
+
+    for row_idx, row in data_rows:
         url   = row[zillow_col].strip() if zillow_col < len(row) else ""
         notes = row[notes_col].strip()  if notes_col  < len(row) else ""
         phone = row[phone_col].strip()  if phone_col  < len(row) else ""
 
         if not url.startswith("http"):
             continue
-        if notes:                        # already worked this lead
+        if notes:
             skipped_worked += 1
             continue
-        if phone and phone not in ("No phone found", "No URL", ""):  # already have a number
+        if phone and phone not in ("No phone found", "No URL", ""):
             skipped_has_phone += 1
             continue
         rows_to_do.append((row_idx, url, row[1] if len(row) > 1 else ""))
+        if new_only and len(rows_to_do) >= limit:
+            break
 
     print(f"  Skipped {skipped_worked} leads (Notes filled = already worked)")
     print(f"  Skipped {skipped_has_phone} leads (phone already scraped)")
@@ -232,4 +237,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    new_only = "--new" in sys.argv
+    main(new_only=new_only, limit=50)

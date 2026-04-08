@@ -33,6 +33,9 @@ jobs:
       - name: Run Zillow scraper
         run: python scripts/zillow_scraper.py
 
+      - name: Scrape phones for newest 50 leads
+        run: python scripts/phone_scraper.py --new
+
       - name: Commit updated leads.json
         run: |
           git config user.name "zillow-bot"
