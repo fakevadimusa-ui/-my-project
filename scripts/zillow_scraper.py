@@ -382,6 +382,9 @@ def push_leads(sheet, leads):
     for lead in leads:
         if lead["address"] in existing:
             continue
+        # Only keep distressed leads — skip clean normal listings
+        if lead["score"] < 1:
+            continue
         profit_display = (
             f"+${lead['profit']:,} (DEAL NOW)" if lead["profit"] > 0
             else f"-${abs(lead['profit']):,} to negotiate"
