@@ -2,15 +2,16 @@ name: Daily Zillow Lead Scraper
 
 on:
   schedule:
-    # 7:00 AM CST every day (CST = UTC-6, so 13:00 UTC)
     - cron: '0 13 * * *'
   workflow_dispatch:
-    # Also lets you click "Run workflow" manually from GitHub any time
+
+permissions:
+  contents: write
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
 
     steps:
       - name: Checkout repo
@@ -25,13 +26,14 @@ jobs:
         run: pip install requests gspread google-auth
 
       - name: Write service account key
-        # Paste your zillow-bot-key.json content into GitHub → Settings → Secrets → ZILLOW_BOT_KEY
-        run: echo '${{ secrets.ZILLOW_BOT_KEY }}' > scripts/zillow-bot-key.json
+        env:
+          KEY_JSON: ${{ secrets.ZILLOW_BOT_KEY }}
+        run: printf '%s' "$KEY_JSON" > scripts/zillow-bot-key.json
 
       - name: Run Zillow scraper
         run: python scripts/zillow_scraper.py
 
-      - name: Commit any updated leads.json
+      - name: Commit updated leads.json
         run: |
           git config user.name "zillow-bot"
           git config user.email "zillow-bot@kbros.auto"
