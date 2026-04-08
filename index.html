@@ -261,6 +261,19 @@
         <div class="head"><div class="title">Call Script v2.3</div></div>
         <div class="script-panel">
 
+          <div class="terminal" style="border-color:rgba(210,153,34,.25)">
+            <div style="color:var(--warning);margin-bottom:6px">VOICEMAIL — short, curious, no pressure</div>
+            <div style="color:#f0f6fc;line-height:1.9">
+              "Hey, I'm trying to reach the owner of <span id="scriptAddressVm" style="color:var(--warning)">the property</span> —
+              my name's Vadim, I'm a local cash buyer here in Springfield.
+              Just saw your place and wanted to see if you'd be open to an offer.
+              No agents, no fees, close on your timeline.
+              Give me a call back when you get a chance —
+              <span style="color:var(--success)">(417) 834-1226</span>.
+              Again that's Vadim, <span style="color:var(--success)">(417) 834-1226</span>. Thanks."
+            </div>
+          </div>
+
           <div class="terminal">
             <div style="color:var(--accent);margin-bottom:6px">OPENING — keep it casual</div>
             <div style="color:#f0f6fc;line-height:1.8">
@@ -528,6 +541,7 @@ function render(){
   $('motivationText').textContent = `${p.motivation || 35}%`;
   $('motivationBar').style.width = `${p.motivation || 35}%`;
   $('scriptAddress').textContent = p.address.split(',')[0];
+  $('scriptAddressVm').textContent = p.address.split(',')[0];
   $('scriptPrice').textContent = fmtMoney(p.price);
   $('scriptMao').textContent = fmtMoney(p.mao);
   $('notesBox').value = state.notes[p.id] || '';
