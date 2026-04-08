@@ -162,6 +162,7 @@
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="chip" id="syncBtn" onclick="syncSheet()" style="cursor:pointer;border-color:rgba(0,217,255,.3);color:var(--accent)">⟳ SYNC</button>
             <button class="chip" id="freshToggle" onclick="toggleFresh()" style="cursor:pointer;border-color:rgba(63,185,80,.3);color:var(--success)">FRESH ONLY</button>
+            <button class="chip" onclick="autoClean()" style="cursor:pointer;border-color:rgba(248,81,73,.3);color:var(--danger)">🧹 AUTO-CLEAN</button>
             <label class="chip" for="csvFile" style="cursor:pointer;font-size:11px">CSV</label>
             <input id="csvFile" type="file" accept=".csv" style="display:none">
           </div>
@@ -707,6 +708,56 @@ function updateGoalBar(callsMade){
     else if(left <= 10) msg.textContent = `${left} to go — halfway there.`;
     else                msg.textContent = `${left} calls to go — let's get it.`;
     msg.style.color = left === 0 ? 'var(--success)' : 'var(--muted)';
+  }
+}
+
+// ---- AUTO CLEAN -------------------------------------------------------------
+function distressScore(p){
+  let score = 0;
+  const dom = p.dom || 0;
+  if(dom >= 180) score += 5;
+  else if(dom >= 90) score += 3;
+  else if(dom >= 60) score += 2;
+  else if(dom >= 45) score += 1;
+
+  if(p.price_drop && String(p.price_drop).trim()) score += 4;
+
+  const mot = p.motivation || 0;
+  if(mot >= 70) score += 2;
+  else if(mot >= 50) score += 1;
+
+  const words = ['as-is','fixer','estate','probate','foreclosure','vacant','motivated',
+    'needs','tlc','divorce','inherited','cash only','fire','water','reo','bank',
+    'abandoned','handyman','reduced','auction','fsbo','must sell','below market'];
+  const text = ((p.condition||'') + ' ' + (p.notes||'')).toLowerCase();
+  words.forEach(w => { if(text.includes(w)) score += 1; });
+
+  return score;
+}
+
+function autoClean(){
+  const before = allProperties.length;
+  const strong = allProperties.filter(p => {
+    // Never remove a lead you've already worked
+    if(p.notes && p.notes.trim()) return true;
+    return distressScore(p) >= 2;
+  });
+  const removed = before - strong.length;
+
+  if(removed === 0){
+    alert('Queue already clean — all leads have distress signals.');
+    return;
+  }
+
+  if(!confirm(`Remove ${removed} weak/non-distressed leads from your queue and keep ${strong.length} solid ones?`)) return;
+
+  allProperties = strong;
+  applyFilter(getCurrent()?.address);
+
+  const status = $('syncStatus');
+  if(status){
+    status.textContent = `Cleaned ${removed} weak leads — ${strong.length} remain`;
+    status.style.color = 'var(--success)';
   }
 }
 
