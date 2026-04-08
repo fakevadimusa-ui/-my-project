@@ -27,35 +27,70 @@ YOUR_NUMBER   = "(417) 834-1226"
 ASSIGNMENT_FEE = 5000
 AVG_REPAIRS    = 15000
 
-# Distressed-filtered Zillow search URLs
-# Each URL targets a specific distress category or high-DOM area
+# --- sort-by-days query string (surfaces oldest/most distressed first) ---
+_DAYS = "?searchQueryState=%7B%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22days%22%7D%7D%7D"
+
 SEARCH_URLS = [
-    # Springfield ZIPs
-    ("Springfield 65802",  "https://www.zillow.com/springfield-mo-65802/"),
-    ("Springfield 65803",  "https://www.zillow.com/springfield-mo-65803/"),
-    ("Springfield 65804",  "https://www.zillow.com/springfield-mo-65804/"),
-    ("Springfield 65807",  "https://www.zillow.com/springfield-mo-65807/"),
-    ("Springfield 65809",  "https://www.zillow.com/springfield-mo-65809/"),
-    # 50-mile radius suburbs
-    ("Nixa",               "https://www.zillow.com/nixa-mo/"),
-    ("Ozark",              "https://www.zillow.com/ozark-mo/"),
-    ("Republic",           "https://www.zillow.com/republic-mo/"),
-    ("Willard",            "https://www.zillow.com/willard-mo/"),
-    ("Strafford",          "https://www.zillow.com/strafford-mo/"),
-    ("Rogersville",        "https://www.zillow.com/rogersville-mo/"),
-    ("Marshfield",         "https://www.zillow.com/marshfield-mo/"),
-    ("Bolivar",            "https://www.zillow.com/bolivar-mo/"),
-    ("Branson",            "https://www.zillow.com/branson-mo/"),
+    # Springfield ZIPs — base pass
+    ("SPR 65802",           "https://www.zillow.com/springfield-mo-65802/"),
+    ("SPR 65803",           "https://www.zillow.com/springfield-mo-65803/"),
+    ("SPR 65804",           "https://www.zillow.com/springfield-mo-65804/"),
+    ("SPR 65807",           "https://www.zillow.com/springfield-mo-65807/"),
+    ("SPR 65809",           "https://www.zillow.com/springfield-mo-65809/"),
+    # Springfield — sorted by oldest DOM (guaranteed distressed)
+    ("SPR 65802 OLD",       "https://www.zillow.com/springfield-mo-65802/" + _DAYS),
+    ("SPR 65803 OLD",       "https://www.zillow.com/springfield-mo-65803/" + _DAYS),
+    ("SPR 65804 OLD",       "https://www.zillow.com/springfield-mo-65804/" + _DAYS),
+    ("SPR 65807 OLD",       "https://www.zillow.com/springfield-mo-65807/" + _DAYS),
+    # Springfield FSBO (owner = motivated seller almost by definition)
+    ("SPR FSBO",            "https://www.zillow.com/springfield-mo/fsbo/"),
+    # Springfield foreclosures
+    ("SPR Foreclosures",    "https://www.zillow.com/springfield-mo/foreclosures/"),
+    # 50-mile suburbs — base
+    ("Nixa",                "https://www.zillow.com/nixa-mo/"),
+    ("Ozark",               "https://www.zillow.com/ozark-mo/"),
+    ("Republic",            "https://www.zillow.com/republic-mo/"),
+    ("Willard",             "https://www.zillow.com/willard-mo/"),
+    ("Strafford",           "https://www.zillow.com/strafford-mo/"),
+    ("Rogersville",         "https://www.zillow.com/rogersville-mo/"),
+    ("Marshfield",          "https://www.zillow.com/marshfield-mo/"),
+    ("Bolivar",             "https://www.zillow.com/bolivar-mo/"),
+    ("Branson",             "https://www.zillow.com/branson-mo/"),
+    # Suburbs — sorted oldest first
+    ("Nixa OLD",            "https://www.zillow.com/nixa-mo/" + _DAYS),
+    ("Ozark OLD",           "https://www.zillow.com/ozark-mo/" + _DAYS),
+    ("Republic OLD",        "https://www.zillow.com/republic-mo/" + _DAYS),
+    # More surrounding towns within 50 miles
+    ("Battlefield",         "https://www.zillow.com/battlefield-mo/"),
+    ("Fair Grove",          "https://www.zillow.com/fair-grove-mo/"),
+    ("Clever",              "https://www.zillow.com/clever-mo/"),
+    ("Aurora",              "https://www.zillow.com/aurora-mo/"),
+    ("Monett",              "https://www.zillow.com/monett-mo/"),
+    ("Mountain Grove",      "https://www.zillow.com/mountain-grove-mo/"),
+    ("Ava",                 "https://www.zillow.com/ava-mo/"),
+    ("Cassville",           "https://www.zillow.com/cassville-mo/"),
+    ("West Plains",         "https://www.zillow.com/west-plains-mo/"),
 ]
 
 DISTRESS_KEYWORDS = [
-    "as-is", "as is", "motivated", "must sell", "price reduced",
-    "fixer", "fixer upper", "needs work", "needs tlc", "tlc", "handyman",
-    "estate sale", "trust sale", "probate", "foreclosure", "bank owned",
-    "reo", "cash only", "investor special", "bring offers", "below market",
-    "vacant", "abandoned", "distressed", "divorce", "relocating",
-    "fsbo", "for sale by owner", "quick close", "inherited",
-    "fire damage", "water damage", "motivated seller", "reduced",
+    # Condition signals
+    "as-is", "as is", "fixer", "fixer upper", "needs work", "needs tlc", "tlc",
+    "handyman", "handyman special", "needs repair", "needs updating", "needs renovation",
+    "fire damage", "water damage", "flood damage", "storm damage", "foundation",
+    "mold", "roof", "structural", "unfinished", "incomplete",
+    # Seller motivation signals
+    "motivated", "motivated seller", "must sell", "must close", "price reduced",
+    "reduced", "bring offers", "all offers considered", "below market",
+    "below appraised", "priced to sell", "priced below", "sell fast",
+    "quick close", "quick sale", "cash only", "investor special",
+    # Life event signals (highest motivation)
+    "estate sale", "trust sale", "probate", "inherited", "inheritance",
+    "divorce", "bankruptcy", "foreclosure", "pre-foreclosure", "bank owned",
+    "reo", "short sale", "auction", "lien", "behind on payments",
+    "relocating", "relocation", "job transfer", "downsizing",
+    # Ownership signals
+    "vacant", "abandoned", "empty", "unoccupied",
+    "fsbo", "for sale by owner", "owner will carry",
 ]
 
 SHEET_HEADERS = [
@@ -178,11 +213,18 @@ def score_listing(listing):
     score   = len(signals)
 
     if price_drop:
-        score += 2
-        signals.insert(0, f"price cut ({price_drop})")
-    if dom >= 90:
         score += 3
-        signals.append(f"DOM {dom}d")
+        signals.insert(0, f"price cut ({price_drop})")
+    # DOM scoring — the older the listing, the more desperate the seller
+    if dom >= 365:
+        score += 8
+        signals.append(f"DOM {dom}d *** ANCIENT ***")
+    elif dom >= 180:
+        score += 6
+        signals.append(f"DOM {dom}d ** VERY OLD **")
+    elif dom >= 90:
+        score += 4
+        signals.append(f"DOM {dom}d * OLD *")
     elif dom >= 60:
         score += 2
         signals.append(f"DOM {dom}d")
@@ -485,7 +527,7 @@ def main():
     leads.sort(key=lambda x: (x["profit"] > 0, x["score"], x["dom"]), reverse=True)
 
     # Fetch phones for top scored leads only
-    top_leads = [l for l in leads if l["score"] >= 1][:20]
+    top_leads = [l for l in leads if l["score"] >= 1][:50]
     if top_leads:
         print(f"\n  Fetching agent phones for top {len(top_leads)} leads...")
         for i, lead in enumerate(top_leads):
