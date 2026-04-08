@@ -175,6 +175,18 @@
           <div id="verseRef" style="font-size:11px;color:var(--accent);font-family:'JetBrains Mono',monospace;margin-top:12px;text-align:right"></div>
         </div>
 
+        <!-- Daily goal -->
+        <div style="padding:14px;border-radius:14px;background:linear-gradient(180deg,rgba(22,27,34,.98),rgba(17,22,29,.98));border:1px solid rgba(255,255,255,.08)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="title" style="font-size:11px">DAILY GOAL</div>
+            <span id="goalText" style="font:700 13px 'JetBrains Mono',monospace;color:#f0f6fc">0 / 20</span>
+          </div>
+          <div style="height:10px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden">
+            <div id="goalBar" style="height:100%;border-radius:999px;background:linear-gradient(90deg,var(--primary),var(--accent));width:0%;transition:width .4s ease"></div>
+          </div>
+          <div id="goalMsg" style="font-size:11px;color:var(--muted);margin-top:6px;font-family:'JetBrains Mono',monospace">20 calls to go — let's get it.</div>
+        </div>
+
         <!-- Today's session stats -->
         <div class="head" style="margin-top:4px">
           <div class="title">Today's Session</div>
@@ -224,8 +236,14 @@
             <span id="noZillow" class="sub" style="display:none;font-size:11px">No Zillow URL in sheet</span>
           </div>
 
+          <!-- Profit banner -->
+          <div id="profitBanner" style="display:none;margin-bottom:14px;padding:14px 16px;border-radius:14px;text-align:center">
+            <div id="profitLabel" style="font:800 13px 'JetBrains Mono',monospace"></div>
+            <div id="profitSub" style="font-size:12px;margin-top:4px;opacity:.8"></div>
+          </div>
+
           <div class="grid">
-            <div class="box"><div class="label">Listed Price</div><div class="value" id="listedPrice">$195,000</div></div>
+            <div class="box"><div class="label">Listed Price</div><div class="value" id="listedPrice">$195,000</div><div class="sub" id="priceDrop" style="color:var(--danger);font-size:11px;margin-top:4px"></div></div>
             <div class="box"><div class="label">Your MAO</div><div class="value" id="maoValue" style="color:var(--success)">$140,000</div><div class="sub" id="maoHint">28% below list</div></div>
             <div class="box"><div class="label">Days on Market</div><div class="value" id="domValue" style="color:var(--danger)">165</div></div>
             <div class="box"><div class="label">Condition</div><div class="value" id="conditionValue" style="color:var(--warning)">Needs Work</div></div>
@@ -249,8 +267,13 @@
           </div>
 
           <div style="margin-top:18px">
-            <div style="display:flex;justify-content:space-between;margin-bottom:10px" class="sub">
-              <span>Motivation</span><span id="motivationText">35%</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <span class="sub">Motivation</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button onclick="adjustMotivation(-10)" style="width:26px;height:26px;border-radius:6px;background:rgba(248,81,73,.15);border:1px solid rgba(248,81,73,.3);color:var(--danger);font-weight:900;cursor:pointer;font-size:14px;line-height:1">−</button>
+                <span id="motivationText" style="font:700 13px 'JetBrains Mono',monospace;color:#f0f6fc;min-width:36px;text-align:center">35%</span>
+                <button onclick="adjustMotivation(10)" style="width:26px;height:26px;border-radius:6px;background:rgba(63,185,80,.15);border:1px solid rgba(63,185,80,.3);color:var(--success);font-weight:900;cursor:pointer;font-size:14px;line-height:1">+</button>
+              </div>
             </div>
             <div class="progress"><div id="motivationBar"></div></div>
           </div>
@@ -527,14 +550,20 @@ function renderLeadList(){
   properties.forEach((p, idx) => {
     const btn = document.createElement('button');
     btn.className = 'lead-item' + (idx === currentIndex ? ' active' : '');
-    const hasPhone = p.phone && p.phone !== 'No phone in sheet' && p.phone !== 'No phone found';
+    const hasPhone  = p.phone && p.phone !== 'No phone in sheet' && p.phone !== 'No phone found';
+    const isDeal    = p.mao > 0 && p.price > 0 && p.mao >= p.price;
+    const hasDrop   = p.price_drop && String(p.price_drop).trim();
     const zillowLink = p.zillow ? `<a href="${p.zillow.startsWith('http') ? p.zillow : 'https://'+p.zillow}" target="_blank" onclick="event.stopPropagation()" style="color:var(--primary);font-size:11px;text-decoration:none;margin-left:6px">↗ Zillow</a>` : '';
     btn.innerHTML = `
-      <div class="lead-name" style="display:flex;align-items:center;justify-content:space-between">
-        <span>${p.address}</span>
-        ${hasPhone ? `<span style="color:var(--success);font-size:10px;font-family:'JetBrains Mono',monospace">📞 ${p.phone}</span>` : '<span style="color:var(--muted);font-size:10px">no phone</span>'}
+      <div class="lead-name" style="display:flex;align-items:center;justify-content:space-between;gap:4px">
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.address}</span>
+        ${isDeal ? '<span style="color:var(--success);font-size:10px;font-family:\'JetBrains Mono\',monospace;white-space:nowrap">💰 DEAL</span>' : ''}
       </div>
-      <div class="lead-meta">${p.beds || 0}BR | ${p.baths || 0}BA | ${Number(p.sqft || 0).toLocaleString()} sqft${zillowLink}</div>
+      <div class="lead-meta" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${hasPhone ? `<span style="color:var(--success);font-size:10px;font-family:'JetBrains Mono',monospace">📞 ${p.phone}</span>` : '<span style="color:var(--muted);font-size:10px">no phone</span>'}
+        ${hasDrop  ? `<span style="color:var(--danger);font-size:10px;font-family:'JetBrains Mono',monospace">↓ price dropped</span>` : ''}
+        ${zillowLink}
+      </div>
       <div class="lead-meta">List ${fmtMoney(p.price)} | MAO ${fmtMoney(p.mao)} | DOM ${p.dom || 0}</div>
     `;
     btn.onclick = () => { currentIndex = idx; render(); };
@@ -571,6 +600,10 @@ function render(){
   updateHouseView(p);
   $('specsValue').textContent = `${p.beds || 0}BR | ${p.baths || 0}BA | ${Number(p.sqft || 0).toLocaleString()} sqft`;
   $('notesHint').textContent = p.notes || 'Imported from CSV';
+  // Price drop flag
+  const dropEl = $('priceDrop');
+  if(dropEl) dropEl.textContent = p.price_drop ? `↓ Price dropped ${p.price_drop}` : '';
+  renderProfitBanner(p);
   $('motivationText').textContent = `${p.motivation || 35}%`;
   $('motivationBar').style.width = `${p.motivation || 35}%`;
   $('scriptAddress').textContent = p.address.split(',')[0];
@@ -616,6 +649,66 @@ $('csvFile').addEventListener('change', async e => {
   state.pipelineValue = allProperties.slice(0, 100).reduce((sum, p) => sum + Math.max(0, (p.price || 0) - (p.mao || 0)), 0);
   alert(`Imported ${parsed.length} leads. ${parsed.filter(p=>p.phone && p.phone!=='No phone in sheet').length} have phone numbers.`);
 });
+
+const DAILY_GOAL = 20;
+
+// ---- MOTIVATION OVERRIDE ----------------------------------------------------
+function adjustMotivation(delta){
+  const p = getCurrent();
+  p.motivation = Math.min(100, Math.max(0, (p.motivation || 35) + delta));
+  $('motivationText').textContent = p.motivation + '%';
+  $('motivationBar').style.width = p.motivation + '%';
+  // color the bar based on level
+  const color = p.motivation >= 70 ? 'linear-gradient(90deg,var(--success),var(--accent))'
+              : p.motivation >= 40 ? 'linear-gradient(90deg,var(--warning),#e5a800)'
+              : 'linear-gradient(90deg,var(--danger),#c43)';
+  $('motivationBar').style.background = color;
+}
+
+// ---- PROFIT CALC ------------------------------------------------------------
+function renderProfitBanner(p){
+  const banner = $('profitBanner');
+  const label  = $('profitLabel');
+  const sub    = $('profitSub');
+  if(!p.price || !p.mao) { banner.style.display='none'; return; }
+  const gap = p.mao - p.price;  // positive = deal at asking
+  banner.style.display = 'block';
+  if(gap >= 0){
+    banner.style.background = 'linear-gradient(135deg,rgba(63,185,80,.18),rgba(63,185,80,.08))';
+    banner.style.border = '1px solid rgba(63,185,80,.35)';
+    label.style.color = 'var(--success)';
+    label.textContent = `DEAL AT ASKING — You pocket $${gap.toLocaleString()}`;
+    sub.style.color = 'rgba(63,185,80,.7)';
+    sub.textContent = `Assign at MAO ${fmtMoney(p.mao)}, buy at ${fmtMoney(p.price)} — spread is yours`;
+  } else {
+    const need = Math.abs(gap);
+    banner.style.background = 'linear-gradient(135deg,rgba(248,81,73,.12),rgba(248,81,73,.04))';
+    banner.style.border = '1px solid rgba(248,81,73,.25)';
+    label.style.color = 'var(--danger)';
+    label.textContent = `Need ${fmtMoney(need)} off asking to make it a deal`;
+    sub.style.color = 'var(--muted)';
+    sub.textContent = `Your MAO is ${fmtMoney(p.mao)} — list is ${fmtMoney(p.price)}`;
+  }
+}
+
+// ---- GOAL BAR ---------------------------------------------------------------
+function updateGoalBar(callsMade){
+  const pct = Math.min(100, Math.round((callsMade / DAILY_GOAL) * 100));
+  const bar = $('goalBar');
+  const txt = $('goalText');
+  const msg = $('goalMsg');
+  if(!bar) return;
+  bar.style.width = pct + '%';
+  if(txt) txt.textContent = `${callsMade} / ${DAILY_GOAL}`;
+  if(msg){
+    const left = Math.max(0, DAILY_GOAL - callsMade);
+    if(left === 0)      msg.textContent = '🔥 GOAL CRUSHED — keep going!';
+    else if(left <= 5)  msg.textContent = `${left} more — finish strong.`;
+    else if(left <= 10) msg.textContent = `${left} to go — halfway there.`;
+    else                msg.textContent = `${left} calls to go — let's get it.`;
+    msg.style.color = left === 0 ? 'var(--success)' : 'var(--muted)';
+  }
+}
 
 // ---- RESET SESSION ----------------------------------------------------------
 function resetSession(){
@@ -727,6 +820,8 @@ function updateSessionStats(){
   let streak = 0, d = new Date();
   while(days.has(d.toDateString())){ streak++; d.setDate(d.getDate()-1); }
   if(s('streakStat')) s('streakStat').textContent = `${streak} DAY`;
+  if(s('callsDoneToday')) s('callsDoneToday').textContent = calls;
+  updateGoalBar(calls);
   if(leftTab === 'log') renderLogToday();
 }
 
