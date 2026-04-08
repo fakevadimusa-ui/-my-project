@@ -170,7 +170,10 @@
         </div>
 
         <!-- Today's session stats -->
-        <div class="head" style="margin-top:4px"><div class="title">Today's Session</div></div>
+        <div class="head" style="margin-top:4px">
+          <div class="title">Today's Session</div>
+          <button onclick="resetSession()" style="font:700 10px 'JetBrains Mono',monospace;padding:4px 10px;border-radius:6px;background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.2);color:var(--danger);cursor:pointer">RESET</button>
+        </div>
         <div class="stats">
           <div class="stat-card"><div class="sub">Calls Made</div><div class="stat-value" style="color:var(--primary)" id="statCalls">0</div></div>
           <div class="stat-card"><div class="sub">Hot Leads</div><div class="stat-value" style="color:var(--warning)" id="statHot">0</div></div>
@@ -178,8 +181,15 @@
           <div class="stat-card"><div class="sub">Fresh Left</div><div class="stat-value" style="color:var(--success)" id="statFresh">—</div></div>
         </div>
 
-        <div class="head" style="margin-top:4px"><div class="title">Lead Queue</div></div>
-        <div class="lead-list" id="leadList"></div>
+        <!-- Queue / Log tabs -->
+        <div class="head" style="margin-top:4px">
+          <div style="display:flex;gap:8px">
+            <button class="view-tab active" id="tabQueue" onclick="switchLeftTab('queue')">QUEUE</button>
+            <button class="view-tab" id="tabLogToday" onclick="switchLeftTab('log')">LOG TODAY</button>
+          </div>
+        </div>
+        <div id="leadList"></div>
+        <div id="logToday" style="display:none;gap:10px;flex-direction:column"></div>
       </div>
     </section>
 
@@ -572,6 +582,54 @@ $('csvFile').addEventListener('change', async e => {
   alert(`Imported ${parsed.length} leads. ${parsed.filter(p=>p.phone && p.phone!=='No phone in sheet').length} have phone numbers.`);
 });
 
+// ---- RESET SESSION ----------------------------------------------------------
+function resetSession(){
+  if(!confirm('Reset today\'s call log? This clears today only.')) return;
+  const log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+  const today = new Date().toDateString();
+  const kept = log.filter(e => new Date(e.ts).toDateString() !== today);
+  localStorage.setItem(LOG_KEY, JSON.stringify(kept));
+  state.callsDone = 0;
+  updateSessionStats();
+  renderLogToday();
+}
+
+// ---- LEFT PANEL TABS --------------------------------------------------------
+let leftTab = 'queue';
+function switchLeftTab(tab){
+  leftTab = tab;
+  document.getElementById('tabQueue').classList.toggle('active', tab === 'queue');
+  document.getElementById('tabLogToday').classList.toggle('active', tab === 'log');
+  document.getElementById('leadList').style.display    = tab === 'queue' ? '' : 'none';
+  document.getElementById('logToday').style.display    = tab === 'log'   ? 'flex' : 'none';
+  if(tab === 'log') renderLogToday();
+}
+
+function renderLogToday(){
+  const container = document.getElementById('logToday');
+  if(!container) return;
+  const log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+  const today = log.filter(e => new Date(e.ts).toDateString() === new Date().toDateString()).reverse();
+  if(!today.length){
+    container.innerHTML = '<div style="color:var(--muted);font:13px \'JetBrains Mono\',monospace;padding:20px;text-align:center">No calls yet today.<br>Go make some money.</div>';
+    return;
+  }
+  const actionColor = {HOT:'var(--warning)',CALLED:'var(--primary)',CALLBACK:'var(--accent)',REJECT:'var(--danger)'};
+  container.innerHTML = today.map(e => {
+    const t = new Date(e.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const col = actionColor[e.action] || 'var(--muted)';
+    return `<div style="padding:12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font:700 11px 'JetBrains Mono',monospace;color:${col}">${e.action}</span>
+        <span style="font:11px 'JetBrains Mono',monospace;color:var(--muted)">${t}</span>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:#f0f6fc;margin-bottom:4px">${e.address || '—'}</div>
+      <div style="font:12px 'JetBrains Mono',monospace;color:var(--success)">${e.phone && e.phone !== 'No phone in sheet' ? e.phone : '—'}</div>
+      ${e.notes ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;border-top:1px solid rgba(255,255,255,.04);padding-top:6px">${e.notes}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
 // ---- BIBLE VERSES -----------------------------------------------------------
 const VERSES = [
   {text:"Commit to the Lord whatever you do, and he will establish your plans.",ref:"Proverbs 16:3"},
@@ -634,6 +692,7 @@ function updateSessionStats(){
   let streak = 0, d = new Date();
   while(days.has(d.toDateString())){ streak++; d.setDate(d.getDate()-1); }
   if(s('streakStat')) s('streakStat').textContent = `${streak} DAY`;
+  if(leftTab === 'log') renderLogToday();
 }
 
 // ---- CALL LOG ---------------------------------------------------------------
