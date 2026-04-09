@@ -543,7 +543,7 @@ function updateHouseView(p){
   } else if(currentView === 'street'){
     container.innerHTML = `<iframe src="https://www.google.com/maps?q=${encoded}&layer=c&output=embed" allowfullscreen loading="lazy"></iframe>`;
   } else {
-    container.innerHTML = `<iframe src="https://maps.google.com/maps?q=${encoded}&z=18&output=embed" allowfullscreen loading="lazy"></iframe>`;
+    container.innerHTML = `<iframe src="https://maps.google.com/maps?q=${encoded}&z=18&t=k&output=embed" allowfullscreen loading="lazy"></iframe>`;
   }
 
   const zBtn = $('zillowBtn');
