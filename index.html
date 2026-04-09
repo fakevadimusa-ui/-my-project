@@ -874,7 +874,10 @@ function renderLogToday(){
   const container = document.getElementById('logToday');
   if(!container) return;
   const log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
-  const today = log.filter(e => new Date(e.ts).toDateString() === new Date().toDateString()).reverse();
+  const todayAll = log.filter(e => new Date(e.ts).toDateString() === new Date().toDateString()).reverse();
+  // One entry per address — keep the most recent
+  const seen = new Set();
+  const today = todayAll.filter(e => { if(seen.has(e.address)) return false; seen.add(e.address); return true; });
   if(!today.length){
     container.innerHTML = '<div style="color:var(--muted);font:13px \'JetBrains Mono\',monospace;padding:20px;text-align:center">No calls yet today.<br>Go make some money.</div>';
     return;
