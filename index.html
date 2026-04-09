@@ -1079,12 +1079,14 @@ function updateSessionStats(){
 const LOG_KEY = 'kbros_call_log';
 function logAction(action, extra){
   const p = getCurrent();
+  const log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+  // Block duplicate — one log entry per property ever
+  if(extra?.leadId && log.some(e => e.leadId === extra.leadId)) return;
   const entry = {
     ts: Date.now(), address: p.address, phone: p.phone,
     action, price: p.price, mao: p.mao,
     notes: state.notes[p.id] || '', ...extra
   };
-  const log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
   log.push(entry);
   localStorage.setItem(LOG_KEY, JSON.stringify(log));
 }
