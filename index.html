@@ -1045,9 +1045,12 @@ function applyFilter(preserveAddress){
 let prevIndex = 0;
 
 $('callBtn').onclick = () => {
+  if($('callBtn').disabled) return;
   const p = getCurrent();
   $('crAddress').textContent = p.address.split(',')[0];
   $('callRatingModal').style.display = 'flex';
+  $('callBtn').disabled = true;
+  $('callBtn').style.opacity = '0.4';
   state.timerRunning = true;
 };
 
@@ -1063,12 +1066,14 @@ function confirmCall(rating){
   if(rating === 'NOT_INTERESTED'){ p.tag = 'DEAD'; p.motivation = Math.max(10, (p.motivation||35)-15); }
   if(rating === 'CALLBACK')      { p.tag = 'CALLBACK'; }
   $('callRatingModal').style.display = 'none';
+  $('callBtn').disabled = false; $('callBtn').style.opacity = '1';
   render(); updateSessionStats();
 }
 
 function cancelCall(){
   state.timerRunning = false;
   $('callRatingModal').style.display = 'none';
+  $('callBtn').disabled = false; $('callBtn').style.opacity = '1';
 }
 $('nextLeadBtn').onclick = () => {
   prevIndex = currentIndex;
