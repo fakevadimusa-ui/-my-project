@@ -158,17 +158,14 @@
   <main class="main">
     <section class="left">
       <div class="scroll">
-        <div class="head" style="margin-bottom:10px">
-          <div class="title">Queue Controls</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="chip" id="syncBtn" onclick="syncSheet()" style="cursor:pointer;border-color:rgba(0,217,255,.3);color:var(--accent)">⟳ SYNC</button>
-            <button class="chip" id="freshToggle" onclick="toggleFresh()" style="cursor:pointer;border-color:rgba(63,185,80,.3);color:var(--success)">FRESH ONLY</button>
-            <button class="chip" onclick="autoClean()" style="cursor:pointer;border-color:rgba(248,81,73,.3);color:var(--danger)">🧹 CLEAN</button>
-            <label class="chip" for="csvFile" style="cursor:pointer;font-size:11px">CSV</label>
-            <input id="csvFile" type="file" accept=".csv" style="display:none">
-          </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <button id="syncBtn" onclick="syncSheet()" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;background:rgba(0,217,255,.07);border:1px solid rgba(0,217,255,.22);color:var(--accent);font:700 11px 'JetBrains Mono',monospace;cursor:pointer">⟳ SYNC</button>
+          <button id="freshToggle" onclick="toggleFresh()" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.22);color:var(--success);font:700 11px 'JetBrains Mono',monospace;cursor:pointer">✦ FRESH</button>
+          <button onclick="autoClean()" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.22);color:var(--danger);font:700 11px 'JetBrains Mono',monospace;cursor:pointer">🧹 CLEAN</button>
+          <label for="csvFile" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--muted);font:700 11px 'JetBrains Mono',monospace;cursor:pointer">📂 CSV</label>
+          <input id="csvFile" type="file" accept=".csv" style="display:none">
         </div>
-        <div class="chip" id="syncStatus" style="font-size:11px;margin-bottom:8px;display:block;width:100%">Not synced</div>
+        <div id="syncStatus" style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:8px;display:none"></div>
 
         <!-- Bible Verse -->
         <div class="card" style="border-color:rgba(0,217,255,.18);min-height:160px;display:flex;flex-direction:column;justify-content:space-between">
