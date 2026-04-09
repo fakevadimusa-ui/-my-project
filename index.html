@@ -887,7 +887,7 @@ setInterval(showVerse, 60000);
 function updateSessionStats(){
   const log = JSON.parse(localStorage.getItem('kbros_call_log') || '[]');
   const today = log.filter(e => new Date(e.ts).toDateString() === new Date().toDateString());
-  const calls = today.length;
+  const calls = today.filter(e => e.action === 'CALLED').length;
   const hot   = today.filter(e => e.action === 'HOT').length;
   const cb    = today.filter(e => e.action === 'CALLBACK').length;
   const fresh = properties.filter(p => !p.notes || !p.notes.trim()).length;
