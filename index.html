@@ -604,6 +604,13 @@ function renderLeadList(){
 }
 
 function render(){
+  if(!properties.length){
+    $('propertyAddress').textContent = 'Queue empty — all leads called!';
+    $('propertySpecsTop').textContent = 'Check HISTORY to restore leads';
+    $('propertyTicker').textContent = 'QUEUE EMPTY';
+    $('profitBanner').style.display = 'none';
+    renderLeadList(); updateSessionStats(); return;
+  }
   const p = getCurrent();
   $('propertyTicker').innerHTML = `${p.id} | ${fmtMoney((p.price || 0)/1000).replace(',','')}K ↓${((p.dom || 0)/28).toFixed(1)}% DOM`;
   $('propertyAddress').textContent = p.address;
@@ -1238,9 +1245,8 @@ function confirmCall(rating){
   if(rating === 'CALLBACK')      { p.tag = 'CALLBACK'; }
   $('callRatingModal').style.display = 'none';
   $('callBtn').disabled = false; $('callBtn').style.opacity = '1';
-  // Immediately remove from both in-memory arrays so it's gone right now
-  allProperties = allProperties.filter(ap => ap.id !== p.id);
-  properties    = properties.filter(ap => ap.id !== p.id);
+  // Remove from active queue only — keep in allProperties so History can find it
+  properties = properties.filter(ap => ap.id !== p.id);
   if(currentIndex >= properties.length) currentIndex = Math.max(0, properties.length - 1);
   render(); updateSessionStats();
 }
@@ -1251,22 +1257,27 @@ function cancelCall(){
   $('callBtn').disabled = false; $('callBtn').style.opacity = '1';
 }
 $('nextLeadBtn').onclick = () => {
+  if(!properties.length) return;
   prevIndex = currentIndex;
   currentIndex = (currentIndex + 1) % properties.length; render();
 };
 $('backBtn').onclick = () => {
+  if(!properties.length) return;
   const tmp = currentIndex; currentIndex = prevIndex; prevIndex = tmp; render();
 };
 $('markHotBtn').onclick = () => {
+  if(!properties.length) return;
   const p = getCurrent(); p.tag = 'HOT'; p.motivation = Math.min(95, (p.motivation || 35) + 8);
-  logAction('HOT'); render(); updateSessionStats();
+  logAction('HOT', { leadId: p.id }); render(); updateSessionStats();
 };
 $('rejectBtn').onclick = () => {
+  if(!properties.length) return;
   const p = getCurrent(); p.tag = 'DEAD'; p.motivation = Math.max(10, (p.motivation || 35) - 15);
-  logAction('REJECT'); render(); updateSessionStats();
+  logAction('REJECT', { leadId: p.id }); render(); updateSessionStats();
 };
 $('callbackBtn').onclick = () => {
-  const p = getCurrent(); p.tag = 'CALLBACK'; logAction('CALLBACK'); render(); updateSessionStats();
+  if(!properties.length) return;
+  const p = getCurrent(); p.tag = 'CALLBACK'; logAction('CALLBACK', { leadId: p.id }); render(); updateSessionStats();
 };
 
 document.addEventListener('keydown', e => {
