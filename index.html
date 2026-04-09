@@ -158,17 +158,8 @@
   <main class="main">
     <section class="left">
       <div class="scroll">
-        <div class="head">
-          <div class="title">Controls</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="chip" id="syncBtn" onclick="syncSheet()" style="cursor:pointer;border-color:rgba(0,217,255,.3);color:var(--accent)">⟳ SYNC</button>
-            <button class="chip" id="freshToggle" onclick="toggleFresh()" style="cursor:pointer;border-color:rgba(63,185,80,.3);color:var(--success)">FRESH ONLY</button>
-            <button class="chip" onclick="autoClean()" style="cursor:pointer;border-color:rgba(248,81,73,.3);color:var(--danger)">🧹 AUTO-CLEAN</button>
-            <label class="chip" for="csvFile" style="cursor:pointer;font-size:11px">CSV</label>
-            <input id="csvFile" type="file" accept=".csv" style="display:none">
-          </div>
-        </div>
-        <div class="chip" id="syncStatus" style="font-size:11px;margin-bottom:4px;display:block;width:100%">Not synced</div>
+        <input id="csvFile" type="file" accept=".csv" style="display:none">
+        <div class="chip" id="syncStatus" style="font-size:11px;margin-bottom:4px;display:none;width:100%">Not synced</div>
 
         <!-- Bible Verse -->
         <div class="card" style="border-color:rgba(0,217,255,.18);min-height:160px;display:flex;flex-direction:column;justify-content:space-between">
@@ -699,12 +690,12 @@ function renderProfitBanner(p){
     sub.textContent = `Assign at MAO ${fmtMoney(p.mao)}, buy at ${fmtMoney(p.price)} — spread is yours`;
   } else {
     const need = Math.abs(gap);
-    banner.style.background = 'linear-gradient(135deg,rgba(248,81,73,.12),rgba(248,81,73,.04))';
-    banner.style.border = '1px solid rgba(248,81,73,.25)';
-    label.style.color = 'var(--danger)';
-    label.textContent = `Need ${fmtMoney(need)} off asking to make it a deal`;
-    sub.style.color = 'var(--muted)';
-    sub.textContent = `Your MAO is ${fmtMoney(p.mao)} — list is ${fmtMoney(p.price)}`;
+    banner.style.background = 'linear-gradient(135deg,rgba(210,153,34,.14),rgba(210,153,34,.06))';
+    banner.style.border = '1px solid rgba(210,153,34,.3)';
+    label.style.color = 'var(--warning)';
+    label.textContent = `💰 Expected Profit: ~$5,000 – $10,000`;
+    sub.style.color = 'rgba(210,153,34,.75)';
+    sub.textContent = `If seller accepts MAO ${fmtMoney(p.mao)} · They need to drop ${fmtMoney(need)} from asking`;
   }
 }
 
