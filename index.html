@@ -1127,8 +1127,9 @@ function confirmCall(rating){
   if(rating === 'CALLBACK')      { p.tag = 'CALLBACK'; }
   $('callRatingModal').style.display = 'none';
   $('callBtn').disabled = false; $('callBtn').style.opacity = '1';
-  // Remove from active queue, advance to next lead
-  applyFilter();
+  // Immediately remove from both in-memory arrays so it's gone right now
+  allProperties = allProperties.filter(ap => ap.id !== p.id);
+  properties    = properties.filter(ap => ap.id !== p.id);
   if(currentIndex >= properties.length) currentIndex = Math.max(0, properties.length - 1);
   render(); updateSessionStats();
 }
