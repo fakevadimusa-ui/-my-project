@@ -203,10 +203,12 @@
           <div style="display:flex;gap:8px">
             <button class="view-tab active" id="tabQueue" onclick="switchLeftTab('queue')">QUEUE</button>
             <button class="view-tab" id="tabLogToday" onclick="switchLeftTab('log')">LOG TODAY</button>
+            <button class="view-tab" id="tabHistory" onclick="switchLeftTab('history')">HISTORY</button>
           </div>
         </div>
         <div id="leadList"></div>
         <div id="logToday" style="display:none;gap:10px;flex-direction:column"></div>
+        <div id="historyList" style="display:none;flex-direction:column;gap:8px"></div>
       </div>
     </section>
 
@@ -802,15 +804,70 @@ function resetSession(){
   renderLogToday();
 }
 
+// ---- HISTORY (called leads) -------------------------------------------------
+const HISTORY_KEY = 'kbros_called_ids';
+function getCalledIds(){ return new Set(JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]')); }
+function markCalled(id){
+  const ids = getCalledIds(); ids.add(id);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify([...ids]));
+}
+function restoreFromHistory(id){
+  const ids = getCalledIds(); ids.delete(id);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify([...ids]));
+  applyFilter();
+  renderHistory();
+  renderLeadList();
+}
+
+function renderHistory(){
+  const container = $('historyList');
+  if(!container) return;
+  const calledIds = getCalledIds();
+  const log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+  const ratingIcon = {NO_ANSWER:'📵',VOICEMAIL:'📬',NOT_INTERESTED:'🚫',CALLBACK:'⏰',HOT:'⭐'};
+  const ratingColor = {NO_ANSWER:'#8B949E',VOICEMAIL:'var(--primary)',NOT_INTERESTED:'var(--danger)',CALLBACK:'var(--accent)',HOT:'var(--warning)'};
+
+  // Build map of id → last call entry
+  const lastCall = {};
+  log.filter(e => e.action === 'CALLED').forEach(e => {
+    if(calledIds.has(e.leadId)) lastCall[e.leadId] = e;
+  });
+
+  const historyLeads = allProperties.filter(p => calledIds.has(p.id));
+  if(!historyLeads.length){
+    container.innerHTML = '<div style="color:var(--muted);font:13px \'JetBrains Mono\',monospace;padding:20px;text-align:center">No leads in history yet.</div>';
+    return;
+  }
+  container.innerHTML = historyLeads.map(p => {
+    const entry = lastCall[p.id];
+    const rating = entry?.rating || 'CALLED';
+    const icon  = ratingIcon[rating] || '📞';
+    const col   = ratingColor[rating] || 'var(--primary)';
+    const label = entry?.ratingLabel || 'Called';
+    const t = entry ? new Date(entry.ts).toLocaleDateString([],{month:'short',day:'numeric'}) : '';
+    return `<div style="padding:12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font:700 11px 'JetBrains Mono',monospace;color:${col}">${icon} ${label}</span>
+        <span style="font:11px 'JetBrains Mono',monospace;color:var(--muted)">${t}</span>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:#f0f6fc;margin-bottom:8px">${p.address}</div>
+      <button onclick="restoreFromHistory('${p.id}')" style="font:700 10px 'JetBrains Mono',monospace;padding:5px 12px;border-radius:6px;background:rgba(0,217,255,.08);border:1px solid rgba(0,217,255,.2);color:var(--accent);cursor:pointer">↩ RESTORE TO QUEUE</button>
+    </div>`;
+  }).join('');
+}
+
 // ---- LEFT PANEL TABS --------------------------------------------------------
 let leftTab = 'queue';
 function switchLeftTab(tab){
   leftTab = tab;
   document.getElementById('tabQueue').classList.toggle('active', tab === 'queue');
   document.getElementById('tabLogToday').classList.toggle('active', tab === 'log');
-  document.getElementById('leadList').style.display    = tab === 'queue' ? '' : 'none';
-  document.getElementById('logToday').style.display    = tab === 'log'   ? 'flex' : 'none';
-  if(tab === 'log') renderLogToday();
+  document.getElementById('tabHistory').classList.toggle('active', tab === 'history');
+  document.getElementById('leadList').style.display    = tab === 'queue'   ? '' : 'none';
+  document.getElementById('logToday').style.display    = tab === 'log'     ? 'flex' : 'none';
+  document.getElementById('historyList').style.display = tab === 'history' ? 'flex' : 'none';
+  if(tab === 'log')     renderLogToday();
+  if(tab === 'history') renderHistory();
 }
 
 function renderLogToday(){
@@ -1028,9 +1085,11 @@ function toggleFresh(){
   applyFilter();
 }
 function applyFilter(preserveAddress){
-  const pool = freshOnly
+  const calledIds = getCalledIds();
+  const pool = (freshOnly
     ? allProperties.filter(p => !p.notes || p.notes.trim() === '')
-    : allProperties;
+    : allProperties
+  ).filter(p => !calledIds.has(p.id));
   properties = sortLeads(pool);
   // Stay on the same lead after a sync/filter — don't jump back to top
   if(preserveAddress){
@@ -1059,14 +1118,18 @@ function confirmCall(rating){
     NO_ANSWER: 'No Answer', VOICEMAIL: 'Voicemail',
     NOT_INTERESTED: 'Not Interested', CALLBACK: 'Callback', HOT: 'Hot Lead'
   };
-  logAction('CALLED', { rating, ratingLabel: ratingLabels[rating] });
-  state.callsDone += 1; state.totalCalls += 1; state.timerRunning = false;
   const p = getCurrent();
+  logAction('CALLED', { rating, ratingLabel: ratingLabels[rating], leadId: p.id });
+  markCalled(p.id);
+  state.callsDone += 1; state.totalCalls += 1; state.timerRunning = false;
   if(rating === 'HOT')           { p.tag = 'HOT'; p.motivation = Math.min(95, (p.motivation||35)+8); }
   if(rating === 'NOT_INTERESTED'){ p.tag = 'DEAD'; p.motivation = Math.max(10, (p.motivation||35)-15); }
   if(rating === 'CALLBACK')      { p.tag = 'CALLBACK'; }
   $('callRatingModal').style.display = 'none';
   $('callBtn').disabled = false; $('callBtn').style.opacity = '1';
+  // Remove from active queue, advance to next lead
+  applyFilter();
+  if(currentIndex >= properties.length) currentIndex = Math.max(0, properties.length - 1);
   render(); updateSessionStats();
 }
 
