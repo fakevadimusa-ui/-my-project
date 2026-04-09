@@ -158,8 +158,17 @@
   <main class="main">
     <section class="left">
       <div class="scroll">
-        <input id="csvFile" type="file" accept=".csv" style="display:none">
-        <div class="chip" id="syncStatus" style="font-size:11px;margin-bottom:4px;display:none;width:100%">Not synced</div>
+        <div class="head" style="margin-bottom:10px">
+          <div class="title">Queue Controls</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="chip" id="syncBtn" onclick="syncSheet()" style="cursor:pointer;border-color:rgba(0,217,255,.3);color:var(--accent)">⟳ SYNC</button>
+            <button class="chip" id="freshToggle" onclick="toggleFresh()" style="cursor:pointer;border-color:rgba(63,185,80,.3);color:var(--success)">FRESH ONLY</button>
+            <button class="chip" onclick="autoClean()" style="cursor:pointer;border-color:rgba(248,81,73,.3);color:var(--danger)">🧹 CLEAN</button>
+            <label class="chip" for="csvFile" style="cursor:pointer;font-size:11px">CSV</label>
+            <input id="csvFile" type="file" accept=".csv" style="display:none">
+          </div>
+        </div>
+        <div class="chip" id="syncStatus" style="font-size:11px;margin-bottom:8px;display:block;width:100%">Not synced</div>
 
         <!-- Bible Verse -->
         <div class="card" style="border-color:rgba(0,217,255,.18);min-height:160px;display:flex;flex-direction:column;justify-content:space-between">
