@@ -1,4 +1,27 @@
 {
-  "updated": "2026-05-01T14:13:06.161535",
-  "leads": []
+  "updated": "2026-05-02T14:04:40.063378",
+  "leads": [
+    {
+      "id": "8239-n-farm-rd-181,-springfield,-mo-6580",
+      "address": "8239 N Farm Rd 181, Springfield, MO 65803",
+      "price": "$450,000",
+      "priceRaw": 450000,
+      "offerAt": "$295,000",
+      "mao": "$300,000",
+      "profit": -150000,
+      "profitLabel": "Need $150,000 off asking",
+      "isDeal": false,
+      "priceDrop": "",
+      "beds": 3,
+      "baths": 2,
+      "sqft": 2641,
+      "dom": 0,
+      "signals": "for sale by owner",
+      "score": 1,
+      "agentPhone": "",
+      "yourNumber": "(417) 834-1226",
+      "url": "https://www.zillow.com/homedetails/8239-N-Farm-Rd-181-Springfield-MO-65803/2128536437_zpid/",
+      "status": "New"
+    }
+  ]
 }
