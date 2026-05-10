@@ -1,27 +1,4 @@
 {
-  "updated": "2026-05-09T14:13:03.420827",
-  "leads": [
-    {
-      "id": "432-wildflower-ln,-nixa,-mo-65714",
-      "address": "432 Wildflower Ln, Nixa, MO 65714",
-      "price": "$0",
-      "priceRaw": 0,
-      "offerAt": "",
-      "mao": "",
-      "profit": 0,
-      "profitLabel": "Need $0 off asking",
-      "isDeal": false,
-      "priceDrop": "",
-      "beds": "",
-      "baths": "",
-      "sqft": 1338,
-      "dom": 0,
-      "signals": "auction",
-      "score": 1,
-      "agentPhone": "",
-      "yourNumber": "(417) 834-1226",
-      "url": "https://www.zillow.com/homedetails/432-Wildflower-Ln-Nixa-MO-65714/112481103_zpid/",
-      "status": "New"
-    }
-  ]
+  "updated": "2026-05-10T14:16:10.534406",
+  "leads": []
 }
