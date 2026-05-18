@@ -1,4 +1,27 @@
 {
-  "updated": "2026-05-17T14:20:49.274538",
-  "leads": []
+  "updated": "2026-05-18T16:17:28.721273",
+  "leads": [
+    {
+      "id": "3578-w-farm-road-74,-springfield,-mo-658",
+      "address": "3578 W Farm Road 74, Springfield, MO 65803",
+      "price": "$349,000",
+      "priceRaw": 349000,
+      "offerAt": "$224,299",
+      "mao": "$229,299",
+      "profit": -119701,
+      "profitLabel": "Need $119,701 off asking",
+      "isDeal": false,
+      "priceDrop": "",
+      "beds": 2,
+      "baths": 2,
+      "sqft": 1567,
+      "dom": 0,
+      "signals": "for sale by owner",
+      "score": 1,
+      "agentPhone": "",
+      "yourNumber": "(417) 834-1226",
+      "url": "https://www.zillow.com/homedetails/3578-W-Farm-Road-74-Springfield-MO-65803/50224387_zpid/",
+      "status": "New"
+    }
+  ]
 }
