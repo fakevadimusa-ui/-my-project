@@ -1,27 +1,4 @@
 {
-  "updated": "2026-05-27T16:32:02.129829",
-  "leads": [
-    {
-      "id": "4132-w-farm-road-172,-brookline,-mo-6561",
-      "address": "4132 W Farm Road 172, Brookline, MO 65619",
-      "price": "$449,900",
-      "priceRaw": 449900,
-      "offerAt": "$294,930",
-      "mao": "$299,930",
-      "profit": -149970,
-      "profitLabel": "Need $149,970 off asking",
-      "isDeal": false,
-      "priceDrop": "",
-      "beds": 4,
-      "baths": 3,
-      "sqft": 2166,
-      "dom": 0,
-      "signals": "for sale by owner",
-      "score": 1,
-      "agentPhone": "",
-      "yourNumber": "(417) 834-1226",
-      "url": "https://www.zillow.com/homedetails/4132-W-Farm-Road-172-Brookline-MO-65619/50288471_zpid/",
-      "status": "New"
-    }
-  ]
+  "updated": "2026-05-28T16:47:13.530335",
+  "leads": []
 }
