@@ -1,27 +1,4 @@
 {
-  "updated": "2026-06-20T14:59:04.056023",
-  "leads": [
-    {
-      "id": "874-e-kenmare-ct,-nixa,-mo-65714",
-      "address": "874 E Kenmare Ct, Nixa, MO 65714",
-      "price": "$899,000",
-      "priceRaw": 899000,
-      "offerAt": "$609,300",
-      "mao": "$614,300",
-      "profit": -284700,
-      "profitLabel": "Need $284,700 off asking",
-      "isDeal": false,
-      "priceDrop": "",
-      "beds": 3,
-      "baths": 3,
-      "sqft": 3000,
-      "dom": 0,
-      "signals": "for sale by owner",
-      "score": 1,
-      "agentPhone": "",
-      "yourNumber": "(417) 834-1226",
-      "url": "https://www.zillow.com/homedetails/874-E-Kenmare-Ct-Nixa-MO-65714/2062202799_zpid/",
-      "status": "New"
-    }
-  ]
+  "updated": "2026-06-21T15:06:08.266473",
+  "leads": []
 }
