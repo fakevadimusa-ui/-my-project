@@ -1,27 +1,4 @@
 {
-  "updated": "2026-06-24T15:29:00.840147",
-  "leads": [
-    {
-      "id": "2119-w-chestnut-st,-springfield,-mo-6580",
-      "address": "2119 W Chestnut St, Springfield, MO 65802",
-      "price": "$0",
-      "priceRaw": 0,
-      "offerAt": "",
-      "mao": "",
-      "profit": 0,
-      "profitLabel": "Need $0 off asking",
-      "isDeal": false,
-      "priceDrop": "",
-      "beds": 2,
-      "baths": 1,
-      "sqft": 882,
-      "dom": 0,
-      "signals": "auction",
-      "score": 1,
-      "agentPhone": "",
-      "yourNumber": "(417) 834-1226",
-      "url": "https://www.zillow.com/homedetails/2119-W-Chestnut-St-Springfield-MO-65802/66815593_zpid/",
-      "status": "New"
-    }
-  ]
+  "updated": "2026-06-25T15:36:42.557564",
+  "leads": []
 }
