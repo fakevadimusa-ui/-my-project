@@ -1,27 +1,4 @@
 {
-  "updated": "2026-06-29T16:32:34.004798",
-  "leads": [
-    {
-      "id": "705-s-main-st,-willard,-mo-65781",
-      "address": "705 S Main St, Willard, MO 65781",
-      "price": "$0",
-      "priceRaw": 0,
-      "offerAt": "",
-      "mao": "",
-      "profit": 0,
-      "profitLabel": "Need $0 off asking",
-      "isDeal": false,
-      "priceDrop": "",
-      "beds": 3,
-      "baths": 2,
-      "sqft": 1562,
-      "dom": 0,
-      "signals": "auction",
-      "score": 1,
-      "agentPhone": "",
-      "yourNumber": "(417) 834-1226",
-      "url": "https://www.zillow.com/homedetails/705-S-Main-St-Willard-MO-65781/50223629_zpid/",
-      "status": "New"
-    }
-  ]
+  "updated": "2026-06-30T15:22:45.410939",
+  "leads": []
 }
